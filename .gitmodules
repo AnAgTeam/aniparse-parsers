@@ -1,0 +1,4 @@
+[submodule "libaniparse"]
+	path = libaniparse
+	url = https://github.com/AnAgTeam/aniparse
+	branch = nightly

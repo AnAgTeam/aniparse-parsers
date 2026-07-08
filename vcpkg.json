@@ -1,0 +1,12 @@
+{
+	"name": "aniparse-parsers",
+	"version": "0.1",
+	"dependencies": [
+		"boost-json",
+		"boost-regex",
+		"boost-system",
+		"curl",
+		"fmt",
+		"tl-expected"
+	]
+}
