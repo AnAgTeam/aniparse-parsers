@@ -43,6 +43,57 @@ static void print_info(const MangaInfo& info) {
 	std::println("  Summary:  {}", description.substr(0, std::min<std::size_t>(description.size(), 100)));
 }
 
+static std::string_view kind_name(ImageItemKind kind) {
+	switch (kind) {
+	case ImageItemKind::Still:    return "still";
+	case ImageItemKind::Animated: return "animated";
+	case ImageItemKind::Video:    return "video";
+	}
+	return "?";
+}
+
+// Search an image source by tags and show the top posts + the first post's media.
+static coro::task<void> showcase_images(ParserStore& store, RequestorContext base,
+                                        std::string key, std::string tags) {
+	auto parser = store.find_by_key(key);
+	if (!parser) {
+		std::println("[{}] not registered", key);
+		co_return;
+	}
+	RequestorContext context = base.new_with_config(parser->make_config(base.config()));
+	auto root = parser->images_getter();
+
+	std::println("== {} : tags '{}' ==", key, tags);
+	SearchRequestQuery search_query;
+	search_query.query = tags;
+	GetFilters filters{ .from = 0, .limit = 3 };
+	auto found = co_await root->search(context, search_query, filters);
+	if (!found) {
+		std::println("  search failed: {}\n", error_line(found.error()));
+		co_return;
+	}
+	for (const auto& entry : found->results) {
+		if (auto info = co_await entry.item->info(context)) {
+			std::println("   - {} [{} tags]", info->title, info->tags.size());
+		}
+	}
+	if (!found->results.empty()) {
+		std::println("  -- media of top hit --");
+		if (auto items = co_await found->results.front().item->items(context, { .from = 0 })) {
+			for (const auto& page_item : items->results) {
+				const ImageItem& media = page_item.item;
+				std::string size = media.image.size
+				    ? format("{}x{}", media.image.size->width, media.image.size->height)
+				    : "?";
+				std::println("   [{}] {} ({})", kind_name(media.kind), media.image.url, size);
+			}
+		} else {
+			std::println("  items failed: {}", error_line(items.error()));
+		}
+	}
+	std::println("");
+}
+
 // Search a single source by key and show the top result's full details.
 static coro::task<void> showcase(ParserStore& store, RequestorContext base,
                                  std::string key, std::string query) {
@@ -113,6 +164,10 @@ coro::task<void> demo() {
 
 	co_await showcase(store, context, "AniList", "chainsaw man");
 	co_await showcase(store, context, "Kitsu",   "berserk");
+
+	// Danbooru is an image source (read-path): search by SFW tags, show media +
+	// its kind. rating:general keeps it safe and is exempt from the 2-tag limit.
+	co_await showcase_images(store, context, "Danbooru", "cirno rating:general");
 
 	co_await route_and_show(store, context, "https://anilist.co/manga/30013/One-Piece");
 	co_await route_and_show(store, context, "https://kitsu.io/manga/one-piece");
