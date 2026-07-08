@@ -44,6 +44,12 @@ void AniListParser::configure(ParserConfig& config) const {
 	}
 }
 
+std::span<const std::string_view> AniListParser::mirrors() const {
+	// The GraphQL host, consumed by the getters via get_api_base() ->
+	// RequestorContext::base_url, so a live catalog override can refresh it.
+	return anilist::api_hosts();
+}
+
 std::unique_ptr<MangaRootGetter> AniListParser::mangas_getter() const {
 	return std::make_unique<AniListMangaRootGetter>();
 }

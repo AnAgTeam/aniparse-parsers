@@ -10,14 +10,27 @@
 #include <boost/json.hpp>
 
 #include <optional>
+#include <span>
 #include <string>
 #include <string_view>
 
+namespace aniparse {
+class RequestorContext;
+}
+
 namespace aniparse::parsers::kitsu {
 
-/// Kitsu's public JSON:API host. No auth for reads. (Media assets moved to
-/// media.kitsu.app, but the API edge is still served here.)
-inline constexpr std::string_view api_host = "https://kitsu.io/api/edge";
+/// Kitsu's public JSON:API host(s), in fallback order. The brand migrated
+/// kitsu.io -> kitsu.app (media already on media.kitsu.app), so the API host is
+/// declared as the parser's mirror set (@see KitsuParser::mirrors) and consumed
+/// through RequestorContext::base_url — a live catalog override can switch hosts
+/// without a new binary. Both edges serve the same data today.
+std::span<const std::string_view> api_hosts();
+
+/// The API base URL to fetch from for this context: a live catalog override for
+/// this parser if present, else the built-in host at the selected alt-link index
+/// (clamped). Valid while @p context lives. @see api_hosts
+std::string_view get_api_base(const RequestorContext& context);
 
 /// JSON:API media type — used as both Accept and Content-Type.
 inline constexpr std::string_view media_type = "application/vnd.api+json";

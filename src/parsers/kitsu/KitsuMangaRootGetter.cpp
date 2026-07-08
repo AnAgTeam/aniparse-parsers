@@ -70,8 +70,9 @@ namespace {
 	}
 
 	/// A /manga collection request with offset paging + sort applied.
-	GetRequest list_request(const GetFilters& filters, std::string_view default_sort) {
-		GetRequest request = { .url = format("{}/manga", kitsu::api_host) };
+	GetRequest list_request(const RequestorContext& context, const GetFilters& filters,
+	                        std::string_view default_sort) {
+		GetRequest request = { .url = format("{}/manga", kitsu::get_api_base(context)) };
 		const pageoff limit = std::min<pageoff>(
 		    filters.limit == page_no_limit ? max_page_limit : static_cast<pageoff>(filters.limit),
 		    max_page_limit);
@@ -103,7 +104,7 @@ MangaGetterRootCompatibilities KitsuMangaRootGetter::latest_support() const noex
 
 NetworkRequestTask<PageResults<std::unique_ptr<MangaGetter>>> KitsuMangaRootGetter::search(
     RequestorContext context, SearchRequestQuery query, GetFilters filters) {
-	GetRequest request = list_request(filters, "-userCount");
+	GetRequest request = list_request(context, filters, "-userCount");
 	if (!query.query.empty()) {
 		request.url_params.add("filter[text]", query.query);
 	}
@@ -117,7 +118,7 @@ NetworkRequestTask<PageResults<std::unique_ptr<MangaGetter>>> KitsuMangaRootGett
 
 NetworkRequestTask<PageResults<std::unique_ptr<MangaGetter>>> KitsuMangaRootGetter::latest(
     RequestorContext context, GetFilters filters) {
-	GetRequest request = list_request(filters, "-startDate");
+	GetRequest request = list_request(context, filters, "-startDate");
 
 	auto json_result = co_await context.request_json(request);
 	if (!json_result) {

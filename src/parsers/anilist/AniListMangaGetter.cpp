@@ -53,7 +53,7 @@ NetworkRequestTask<MangaInfo> AniListMangaGetter::info(RequestorContext context)
 	variables["id"] = media_id_;
 
 	PostRequest request = {
-	    .url  = std::string(anilist::api_host),
+	    .url  = std::string(anilist::get_api_base(context)),
 	    .body = anilist::graphql_body(media_query, std::move(variables)),
 	};
 

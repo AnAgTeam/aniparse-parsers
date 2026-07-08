@@ -10,13 +10,26 @@
 #include <boost/json.hpp>
 
 #include <optional>
+#include <span>
 #include <string>
 #include <string_view>
 
+namespace aniparse {
+class RequestorContext;
+}
+
 namespace aniparse::parsers::anilist {
 
-/// AniList's single GraphQL endpoint. Public, no auth needed for reads.
-inline constexpr std::string_view api_host = "https://graphql.anilist.co";
+/// AniList's GraphQL host(s). A single official endpoint today, but declared as
+/// the parser's mirror set (@see AniListParser::mirrors) and consumed through
+/// RequestorContext::base_url, so if the endpoint ever moves a live catalog
+/// override can point at the new host without shipping a new binary.
+std::span<const std::string_view> api_hosts();
+
+/// The GraphQL base URL to fetch from for this context: a live catalog override
+/// for this parser if present, else the built-in host at the selected alt-link
+/// index (clamped). Valid while @p context lives. @see api_hosts
+std::string_view get_api_base(const RequestorContext& context);
 
 /// The headers every GraphQL call needs: JSON content-type + accept, and a
 /// browser-ish User-Agent (AniList rejects an absent UA).

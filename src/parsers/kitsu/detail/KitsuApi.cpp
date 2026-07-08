@@ -5,9 +5,11 @@
  */
 #include "aniparse/parsers/kitsu/detail/KitsuApi.hpp"
 #include "aniparse/json/Json.hpp"
+#include "aniparse/ClientContext.hpp"
 
 #include <boost/json.hpp>
 
+#include <array>
 #include <cstdlib>
 
 namespace aniparse::parsers::kitsu {
@@ -69,6 +71,21 @@ namespace {
 		}
 	}
 } // namespace
+
+std::span<const std::string_view> api_hosts() {
+	using namespace std::string_view_literals;
+	// kitsu.io primary, kitsu.app fallback (verified live; the brand migrated to
+	// kitsu.app). A live catalog override can reorder/replace them.
+	static constexpr std::array hosts = {
+	    "https://kitsu.io/api/edge"sv,
+	    "https://kitsu.app/api/edge"sv,
+	};
+	return hosts;
+}
+
+std::string_view get_api_base(const RequestorContext& context) {
+	return context.base_url(api_hosts());
+}
 
 Headers api_headers() {
 	return Headers{

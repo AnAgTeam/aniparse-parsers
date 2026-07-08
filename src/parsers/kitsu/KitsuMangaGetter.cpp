@@ -47,8 +47,8 @@ NetworkRequestTask<MangaInfo> KitsuMangaGetter::info(RequestorContext context) {
 	// are sideloaded so tags come back in one round-trip.
 	const bool numeric = is_numeric(ref_);
 	GetRequest request = {
-	    .url = numeric ? format("{}/manga/{}", kitsu::api_host, ref_)
-	                   : format("{}/manga", kitsu::api_host),
+	    .url = numeric ? format("{}/manga/{}", kitsu::get_api_base(context), ref_)
+	                   : format("{}/manga", kitsu::get_api_base(context)),
 	};
 	request.url_params.add("include", "categories");
 	if (!numeric) {

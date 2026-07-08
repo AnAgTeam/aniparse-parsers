@@ -42,6 +42,12 @@ void KitsuParser::configure(ParserConfig& config) const {
 	}
 }
 
+std::span<const std::string_view> KitsuParser::mirrors() const {
+	// The JSON:API host(s), consumed by the getters via get_api_base() ->
+	// RequestorContext::base_url, so a live catalog override can refresh them.
+	return kitsu::api_hosts();
+}
+
 std::unique_ptr<MangaRootGetter> KitsuParser::mangas_getter() const {
 	return std::make_unique<KitsuMangaRootGetter>();
 }

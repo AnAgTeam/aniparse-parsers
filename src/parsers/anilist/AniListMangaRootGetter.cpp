@@ -134,7 +134,7 @@ NetworkRequestTask<SearchCompatibilities> AniListMangaRootGetter::search_support
 	SearchItems filters;
 
 	PostRequest request = {
-	    .url  = std::string(anilist::api_host),
+	    .url  = std::string(anilist::get_api_base(context)),
 	    .body = anilist::graphql_body(genre_query, {}),
 	};
 	if (auto json_result = co_await context.request_json(request)) {
@@ -190,7 +190,7 @@ NetworkRequestTask<PageResults<std::unique_ptr<MangaGetter>>> AniListMangaRootGe
 	}
 
 	PostRequest request = {
-	    .url  = std::string(anilist::api_host),
+	    .url  = std::string(anilist::get_api_base(context)),
 	    .body = anilist::graphql_body(search_query, std::move(variables)),
 	};
 	auto json_result = co_await context.request_json(request);
@@ -211,7 +211,7 @@ NetworkRequestTask<PageResults<std::unique_ptr<MangaGetter>>> AniListMangaRootGe
 	variables["sort"]    = boost::json::array{ boost::json::string("UPDATED_AT_DESC") };
 
 	PostRequest request = {
-	    .url  = std::string(anilist::api_host),
+	    .url  = std::string(anilist::get_api_base(context)),
 	    .body = anilist::graphql_body(search_query, std::move(variables)),
 	};
 	auto json_result = co_await context.request_json(request);

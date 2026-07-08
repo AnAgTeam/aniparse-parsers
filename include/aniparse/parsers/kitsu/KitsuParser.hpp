@@ -23,6 +23,7 @@ public:
 	ParserCompatibilities compatibilities() const override;
 	void emplace_domains(EmplaceDomainsContext& context) const override;
 	void configure(ParserConfig& config) const override;
+	std::span<const std::string_view> mirrors() const override;
 	std::unique_ptr<MangaRootGetter> mangas_getter() const override;
 };
 

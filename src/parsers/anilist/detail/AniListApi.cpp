@@ -5,8 +5,11 @@
  */
 #include "aniparse/parsers/anilist/detail/AniListApi.hpp"
 #include "aniparse/json/Json.hpp"
+#include "aniparse/ClientContext.hpp"
 
 #include <boost/json.hpp>
+
+#include <array>
 
 namespace aniparse::parsers::anilist {
 
@@ -53,6 +56,19 @@ namespace {
 		}
 	}
 } // namespace
+
+std::span<const std::string_view> api_hosts() {
+	using namespace std::string_view_literals;
+	// One official endpoint today; a live catalog override can supersede it.
+	static constexpr std::array hosts = {
+	    "https://graphql.anilist.co"sv,
+	};
+	return hosts;
+}
+
+std::string_view get_api_base(const RequestorContext& context) {
+	return context.base_url(api_hosts());
+}
 
 Headers api_headers() {
 	return Headers{
