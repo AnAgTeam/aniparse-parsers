@@ -5,7 +5,7 @@
  *
  * Live demo of the example parsers against their real public APIs: registers
  * AniList + Kitsu, searches each, prints the top result's details, and shows URL
- * routing. Both are Tier-1 metadata sources — they catalog manga but host no
+ * routing. Both are public metadata sources — they catalog manga but host no
  * chapter content, so the reading path is intentionally unimplemented.
  * Needs network reachability to graphql.anilist.co and kitsu.io.
  */

@@ -11,7 +11,7 @@ namespace aniparse::parsers {
 /**
  * @brief AniList (anilist.co) — a public GraphQL metadata source.
  *
- * A Tier-1 showcase parser: search and info map cleanly onto the manga model,
+ * A showcase parser: search and info map cleanly onto the manga model,
  * driven by AniList's open GraphQL API (no auth for reads). AniList does not
  * host chapter content, so the reading path (chapters / pages) stays
  * unimplemented — this is a metadata parser by design.
