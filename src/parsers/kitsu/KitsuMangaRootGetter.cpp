@@ -104,6 +104,18 @@ MangaGetterRootCompatibilities KitsuMangaRootGetter::latest_support() const noex
 
 NetworkRequestTask<PageResults<std::unique_ptr<MangaGetter>>> KitsuMangaRootGetter::search(
     RequestorContext context, SearchRequestQuery query, GetFilters filters) {
+	// Reject an unsupported filter/sort up front with a typed error, rather than
+	// letting the API silently drop it. Kitsu's search_support is cheap (static
+	// sorts, no network), so this costs nothing extra.
+	auto support = co_await search_support(context);
+	if (!support) {
+		co_return unexpected(std::move(support.error()));
+	}
+	if (auto errors = validate_query(*support, query, filters); !errors.empty()) {
+		co_return make_response_error(RequestErrorCode::InvalidArguments,
+		                              describe_search_query_errors(errors));
+	}
+
 	GetRequest request = list_request(context, filters, "-userCount");
 	if (!query.query.empty()) {
 		request.url_params.add("filter[text]", query.query);
@@ -118,6 +130,11 @@ NetworkRequestTask<PageResults<std::unique_ptr<MangaGetter>>> KitsuMangaRootGett
 
 NetworkRequestTask<PageResults<std::unique_ptr<MangaGetter>>> KitsuMangaRootGetter::latest(
     RequestorContext context, GetFilters filters) {
+	if (auto errors = validate_latest_filters(filters); !errors.empty()) {
+		co_return make_response_error(RequestErrorCode::InvalidArguments,
+		                              describe_search_query_errors(errors));
+	}
+
 	GetRequest request = list_request(context, filters, "-startDate");
 
 	auto json_result = co_await context.request_json(request);

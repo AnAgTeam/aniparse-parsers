@@ -171,6 +171,18 @@ MangaGetterRootCompatibilities AniListMangaRootGetter::latest_support() const no
 
 NetworkRequestTask<PageResults<std::unique_ptr<MangaGetter>>> AniListMangaRootGetter::search(
     RequestorContext context, SearchRequestQuery query, GetFilters filters) {
+	// Reject an unsupported filter/sort up front with a typed error, rather than
+	// letting the API silently drop it. (search_support fetches the genre catalog;
+	// a real deployment would cache it — see search_support's note.)
+	auto support = co_await search_support(context);
+	if (!support) {
+		co_return unexpected(std::move(support.error()));
+	}
+	if (auto errors = validate_query(*support, query, filters); !errors.empty()) {
+		co_return make_response_error(RequestErrorCode::InvalidArguments,
+		                              describe_search_query_errors(errors));
+	}
+
 	boost::json::object variables;
 	variables["page"]    = filters.from / per_page + 1;
 	variables["perPage"] = per_page;
@@ -205,6 +217,11 @@ NetworkRequestTask<PageResults<std::unique_ptr<MangaGetter>>> AniListMangaRootGe
 
 NetworkRequestTask<PageResults<std::unique_ptr<MangaGetter>>> AniListMangaRootGetter::latest(
     RequestorContext context, GetFilters filters) {
+	if (auto errors = validate_latest_filters(filters); !errors.empty()) {
+		co_return make_response_error(RequestErrorCode::InvalidArguments,
+		                              describe_search_query_errors(errors));
+	}
+
 	boost::json::object variables;
 	variables["page"]    = filters.from / per_page + 1;
 	variables["perPage"] = per_page;
