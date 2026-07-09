@@ -3,7 +3,9 @@
 # and no live host. Built as its own target so the ASan / analyze legs can drive it.
 add_executable(aniparse-parsers-tests
 	"catch_amalgamated.cpp" "catch_amalgamated.hpp"
+	"CoroTest.hpp"
 	"DanbooruMappingTest.cpp"
+	"DanbooruSearchTest.cpp"
 )
 
 set_property(TARGET aniparse-parsers-tests PROPERTY CXX_STANDARD 23)
