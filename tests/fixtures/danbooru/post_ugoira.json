@@ -1,0 +1,22 @@
+{
+  "_fixture": "Synthetic ugoira: top-level file is a zip (frame archive) -> derive_kind Animated, but post_to_item swaps in the playable media_asset sample variant and upgrades the kind to Video. Safe rating (s). No media bytes.",
+  "id": 5000003,
+  "rating": "s",
+  "file_ext": "zip",
+  "file_url": "https://cdn.example-booru.test/data/ugoira_5000003.zip",
+  "preview_file_url": "https://cdn.example-booru.test/data/preview/ugoira_5000003.jpg",
+  "image_width": 800,
+  "image_height": 800,
+  "updated_at": "2026-01-04T00:00:00.000-05:00",
+  "tag_string_artist": "example_artist",
+  "tag_string_copyright": "original",
+  "tag_string_character": "",
+  "tag_string_meta": "ugoira animated",
+  "tag_string_general": "1girl solo",
+  "media_asset": {
+    "variants": [
+      { "type": "180x180", "url": "https://cdn.example-booru.test/data/sample/ugoira_5000003_180.jpg" },
+      { "type": "sample",  "url": "https://cdn.example-booru.test/data/sample/ugoira_5000003.webm" }
+    ]
+  }
+}

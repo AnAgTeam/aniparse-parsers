@@ -1,0 +1,16 @@
+{
+  "_fixture": "Synthetic, hand-authored to match Danbooru's /posts/{id}.json schema. Safe rating (g), no media bytes — only metadata strings and placeholder cdn URLs. Not a captured response; constructed so the mapping's tag count, title synthesis, and rating are deterministic.",
+  "id": 5000001,
+  "rating": "g",
+  "file_ext": "png",
+  "file_url": "https://cdn.example-booru.test/data/still_5000001.png",
+  "preview_file_url": "https://cdn.example-booru.test/data/preview/still_5000001.jpg",
+  "image_width": 1200,
+  "image_height": 1600,
+  "updated_at": "2026-01-02T03:04:05.678-05:00",
+  "tag_string_artist": "example_artist",
+  "tag_string_copyright": "touhou_project",
+  "tag_string_character": "cirno",
+  "tag_string_meta": "highres absurdres",
+  "tag_string_general": "1girl solo blue_hair short_hair blue_eyes wings ice ice_wings dress blue_dress ribbon hair_ribbon smile open_mouth looking_at_viewer full_body standing barefoot sky cloud day outdoors snow winter bow blush simple_background white_background arms_up flying wide_shot cowboy_shot sunlight blue_theme cold frost sparkle transparent_wings crystal z_final_general_tag"
+}

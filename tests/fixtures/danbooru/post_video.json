@@ -1,0 +1,16 @@
+{
+  "_fixture": "Synthetic. A webm post -> ImageItemKind::Video, poster taken from preview_file_url. Safe rating (s). No media bytes; URLs are placeholders.",
+  "id": 5000002,
+  "rating": "s",
+  "file_ext": "webm",
+  "file_url": "https://cdn.example-booru.test/data/clip_5000002.webm",
+  "preview_file_url": "https://cdn.example-booru.test/data/preview/clip_5000002.jpg",
+  "image_width": 1280,
+  "image_height": 720,
+  "updated_at": "2026-01-03T10:11:12.000-05:00",
+  "tag_string_artist": "example_artist",
+  "tag_string_copyright": "original",
+  "tag_string_character": "",
+  "tag_string_meta": "video",
+  "tag_string_general": "1girl solo animated"
+}

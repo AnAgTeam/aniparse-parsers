@@ -1,0 +1,16 @@
+{
+  "_fixture": "Synthetic banned/deleted post: file_url is null, so post_to_item yields nullopt (no servable media) while post_to_container_info still maps the surviving metadata. Safe rating (s).",
+  "id": 5000004,
+  "rating": "s",
+  "file_ext": "jpg",
+  "file_url": null,
+  "preview_file_url": "",
+  "image_width": 0,
+  "image_height": 0,
+  "updated_at": "2026-01-05T06:07:08.000-05:00",
+  "tag_string_artist": "",
+  "tag_string_copyright": "original",
+  "tag_string_character": "cirno",
+  "tag_string_meta": "banned_artist",
+  "tag_string_general": "1girl solo"
+}

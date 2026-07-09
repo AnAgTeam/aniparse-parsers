@@ -1,0 +1,47 @@
+[
+  {
+    "id": 5000010,
+    "rating": "g",
+    "file_ext": "png",
+    "file_url": "https://cdn.example-booru.test/data/page_5000010.png",
+    "preview_file_url": "https://cdn.example-booru.test/data/preview/page_5000010.jpg",
+    "image_width": 1000,
+    "image_height": 1400,
+    "updated_at": "2026-02-01T00:00:00.000-05:00",
+    "tag_string_artist": "example_artist",
+    "tag_string_copyright": "touhou_project",
+    "tag_string_character": "cirno",
+    "tag_string_meta": "highres",
+    "tag_string_general": "1girl solo blue_hair ice wings"
+  },
+  {
+    "id": 5000011,
+    "rating": "s",
+    "file_ext": "webm",
+    "file_url": "https://cdn.example-booru.test/data/page_5000011.webm",
+    "preview_file_url": "https://cdn.example-booru.test/data/preview/page_5000011.jpg",
+    "image_width": 1280,
+    "image_height": 720,
+    "updated_at": "2026-02-02T00:00:00.000-05:00",
+    "tag_string_artist": "example_artist",
+    "tag_string_copyright": "original",
+    "tag_string_character": "",
+    "tag_string_meta": "video",
+    "tag_string_general": "1girl solo animated"
+  },
+  {
+    "id": 5000012,
+    "rating": "s",
+    "file_ext": "jpg",
+    "file_url": null,
+    "preview_file_url": "",
+    "image_width": 0,
+    "image_height": 0,
+    "updated_at": "2026-02-03T00:00:00.000-05:00",
+    "tag_string_artist": "",
+    "tag_string_copyright": "original",
+    "tag_string_character": "cirno",
+    "tag_string_meta": "banned_artist",
+    "tag_string_general": "1girl solo"
+  }
+]

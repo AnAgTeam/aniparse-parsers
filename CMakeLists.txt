@@ -3,6 +3,7 @@ cmake_minimum_required (VERSION 3.18)
 # ---- PREPARE
 
 option(ANIPARSE_PARSERS_BUILD_EXAMPLES "build examples, Default=ON" ON)
+option(ANIPARSE_PARSERS_BUILD_TESTS "build the parser test suite, Default=ON" ON)
 
 # without this vcpkg won't try to install dependencies
 if (CMAKE_TOOLCHAIN_FILE MATCHES "vcpkg.cmake")
@@ -70,6 +71,11 @@ target_link_libraries(aniparse-parsers PUBLIC
 
 if (ANIPARSE_PARSERS_BUILD_EXAMPLES)
 	add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/examples")
+endif()
+
+if (ANIPARSE_PARSERS_BUILD_TESTS)
+	enable_testing()
+	add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/tests")
 endif()
 
 # ---- CONFIGURE PACKAGE
