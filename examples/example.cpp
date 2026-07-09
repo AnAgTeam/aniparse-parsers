@@ -9,15 +9,19 @@
  * chapter content, so the reading path is intentionally unimplemented.
  * Needs network reachability to graphql.anilist.co and kitsu.io.
  */
+#define _CRT_SECURE_NO_WARNINGS // std::getenv for the Gelbooru credentials demo
+
 #include <aniparse/AniParse.hpp>
 #include <aniparse/ParserStore.hpp>
 #include <aniparse/Client.hpp>
 #include <aniparse/parsers/DefaultParsers.hpp>
+#include <aniparse/types/Authentication.hpp>
 #include <aniparse/utility/Format.hpp>
 #include <coro/task.hpp>
 #include <coro/sync_wait.hpp>
 
 #include <algorithm>
+#include <cstdlib>
 #include <memory>
 #include <print>
 #include <string>
@@ -89,6 +93,69 @@ static coro::task<void> showcase_images(ParserStore& store, RequestorContext bas
 			}
 		} else {
 			std::println("  items failed: {}", error_line(items.error()));
+		}
+	}
+	std::println("");
+}
+
+// Gelbooru's DAPI is credentialed: a live search needs a user-supplied api_key +
+// user_id (GELBOORU_USER_ID / GELBOORU_API_KEY in the environment). Autocomplete is
+// the one credential-free surface, so it always runs; search only when a key is set.
+static coro::task<void> showcase_gelbooru(ParserStore& store, RequestorContext base) {
+	auto parser = store.find_by_key("Gelbooru");
+	if (!parser) {
+		std::println("[Gelbooru] not registered");
+		co_return;
+	}
+	RequestorContext context = base.new_with_config(parser->make_config(base.config()));
+	auto root = parser->images_getter();
+
+	std::println("== Gelbooru ==");
+
+	// Credential-free autocomplete: something to see without a key.
+	if (auto suggestions = co_await root->suggest(context, "cat", std::nullopt)) {
+		std::print("  autocomplete 'cat':");
+		for (const auto& suggestion : *suggestions) {
+			std::print(" {}", suggestion.value);
+		}
+		std::println("");
+	}
+
+	const char* user_id = std::getenv("GELBOORU_USER_ID");
+	const char* api_key = std::getenv("GELBOORU_API_KEY");
+	if (!user_id || !*user_id || !api_key || !*api_key) {
+		std::println("  set GELBOORU_USER_ID + GELBOORU_API_KEY to run a live search (the DAPI is auth-walled)\n");
+		co_return;
+	}
+
+	// Fold the credentials into the config; every request then carries them.
+	auto authed = co_await parser->authenticate_context(
+	    context, AuthenticationUserPassword{ .username = user_id, .password = api_key });
+	if (!authed) {
+		std::println("  auth failed: {}\n", error_line(authed.error()));
+		co_return;
+	}
+	context = context.new_with_config(std::make_shared<ParserConfig>(**authed));
+
+	SearchRequestQuery query;
+	query.query = "cirno rating:general";
+	auto found = co_await root->search(context, query, GetFilters{ .from = 0, .limit = 3 });
+	if (!found) {
+		std::println("  search failed: {}\n", error_line(found.error()));
+		co_return;
+	}
+	for (const auto& entry : found->results) {
+		if (auto info = co_await entry.item->info(context)) {
+			std::println("   - {} [{} tags]", info->title, info->tags.size());
+		}
+	}
+	if (!found->results.empty()) {
+		std::println("  -- media of top hit --");
+		if (auto items = co_await found->results.front().item->items(context, { .from = 0 })) {
+			for (const auto& page_item : items->results) {
+				const ImageItem& media = page_item.item;
+				std::println("   [{}] {}", kind_name(media.kind), media.image.url);
+			}
 		}
 	}
 	std::println("");
@@ -168,6 +235,9 @@ coro::task<void> demo() {
 	// Danbooru is an image source (read-path): search by SFW tags, show media +
 	// its kind. rating:general keeps it safe and is exempt from the 2-tag limit.
 	co_await showcase_images(store, context, "Danbooru", "cirno rating:general");
+
+	// Gelbooru: autocomplete always; live search when GELBOORU_USER_ID + _API_KEY are set.
+	co_await showcase_gelbooru(store, context);
 
 	co_await route_and_show(store, context, "https://anilist.co/manga/30013/One-Piece");
 	co_await route_and_show(store, context, "https://kitsu.io/manga/one-piece");
