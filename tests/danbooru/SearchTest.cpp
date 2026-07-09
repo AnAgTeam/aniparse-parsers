@@ -5,8 +5,10 @@
  */
 #include "CoroTest.hpp"
 #include "support/ParserTest.hpp"
+#include "danbooru/DanbooruChecks.hpp"
 
 #include "aniparse/parsers/danbooru/DanbooruImagesGetter.hpp"
+#include "aniparse/parsers/danbooru/DanbooruParser.hpp"
 
 // Whole-method tests for the Danbooru search path, driven through a canned client
 // so the REAL getter code runs offline: search() -> list_request -> request_json ->
@@ -19,6 +21,7 @@
 using namespace aniparse;
 using aniparse::parsers::DanbooruImagesGetter;
 using aniparse::parsertest::context_over;
+using aniparse::parsertest::data_context;
 using aniparse::parsertest::make_mock;
 using aniparse::parsertest::read_fixture;
 
@@ -72,6 +75,15 @@ CORO_TEST_CASE("search maps a posts page into container getters") {
 	auto items2 = co_await page->results[2].item->items(context, GetFilters{});
 	REQUIRE(items2.has_value());
 	CHECK(items2->results.empty());
+}
+
+// One test, two data sources: the fixture by default (deterministic, runs in CI) and
+// the real danbooru.donmai.us under ANIPARSE_TEST_LIVE=1 — same assertions, no second
+// copy of the test and nothing backend-specific here.
+CORO_TEST_CASE("Danbooru: search shape (fixture by default, live under ANIPARSE_TEST_LIVE)", "[live]") {
+	parsers::DanbooruParser parser;
+	RequestorContext context = data_context(parser, "danbooru/fixtures/posts_page.json");
+	co_await danbooru_checks::assert_search_shape(context, "cirno rating:general");
 }
 
 CORO_TEST_CASE("search builds the /posts.json request with tags, page and limit") {

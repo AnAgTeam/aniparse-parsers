@@ -8,6 +8,8 @@ add_executable(aniparse-parsers-tests
 	"catch_amalgamated.cpp" "catch_amalgamated.hpp"
 	"CoroTest.hpp"
 	"support/ParserTest.hpp"
+	"support/LiveClient.cpp"
+	"danbooru/DanbooruChecks.hpp"
 	"danbooru/MappingTest.cpp"
 	"danbooru/SearchTest.cpp"
 )

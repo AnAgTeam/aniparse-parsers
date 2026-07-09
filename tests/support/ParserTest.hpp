@@ -8,14 +8,19 @@
 
 #include "aniparse/ClientContext.hpp"
 #include "aniparse/CookieJar.hpp"
+#include "aniparse/Parser.hpp"
 
 #include <boost/json.hpp>
 
+#include <cstdlib>
 #include <fstream>
+#include <functional>
 #include <memory>
 #include <source_location>
 #include <sstream>
+#include <stdexcept>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <variant>
 
@@ -103,6 +108,56 @@ inline std::string read_fixture(std::string_view relative) {
 /// navigating: the returned value owns the tree that as_object()/if_object() borrow.
 inline boost::json::value load_fixture_json(std::string_view relative) {
 	return boost::json::parse(read_fixture(relative));
+}
+
+// --- Fixture vs live data source ------------------------------------------------
+//
+// A behaviour test is written once and run against either the canned fixture
+// (default, deterministic, what CI runs) or the real API — chosen at runtime by the
+// ANIPARSE_TEST_LIVE environment variable, not by a second copy of the test. The
+// live transport is INJECTED (set_live_client_factory), so nothing here is tied to a
+// particular HTTP backend; a single registrar TU installs whatever client the build
+// has, and a build with none simply has no live mode.
+
+/// True when ANIPARSE_TEST_LIVE is set to a non-empty, non-"0" value. Read once.
+inline bool live_mode() {
+	static const bool live = [] {
+		const char* value = std::getenv("ANIPARSE_TEST_LIVE");
+		return value && *value && std::string_view(value) != "0";
+	}();
+	return live;
+}
+
+using LiveClientFactory = std::function<std::shared_ptr<ClientContext>()>;
+
+/// The process-wide factory for the real HTTP client, installed by a registrar TU
+/// (@see set_live_client_factory). Empty when the build ships no live transport.
+inline LiveClientFactory& live_client_factory() {
+	static LiveClientFactory factory;
+	return factory;
+}
+
+/// Install the real-client factory. Backend-agnostic: the caller decides which
+/// concrete ClientContext to build (curl, NSURLSession, ...), keeping the tests and
+/// this header free of any backend dependency.
+inline void set_live_client_factory(LiveClientFactory factory) {
+	live_client_factory() = std::move(factory);
+}
+
+/// A context whose data is either the canned @p fixture_rel (default) or the live
+/// API for @p parser (ANIPARSE_TEST_LIVE set). In live mode the parser's make_config
+/// stamps its id + headers onto the real transport, exactly as production would.
+/// @throws std::runtime_error in live mode when no live client was registered.
+inline RequestorContext data_context(const Parser& parser, std::string_view fixture_rel) {
+	if (!live_mode()) {
+		return context_over(make_mock(read_fixture(fixture_rel)));
+	}
+	const LiveClientFactory& factory = live_client_factory();
+	if (!factory) {
+		throw std::runtime_error("ANIPARSE_TEST_LIVE is set but no live client is registered in this build");
+	}
+	RequestorContext base(factory(), std::make_shared<DummyLogger>(), nullptr);
+	return base.new_with_config(parser.make_config(base.config()));
 }
 
 } // namespace aniparse::parsertest
