@@ -35,6 +35,18 @@ namespace {
 		return std::nullopt;
 	}
 
+	/// Map a Danbooru tag category id to a search-key axis (@see search_keys), so a
+	/// suggestion is colored/grouped by what kind of tag it is. General (0) and meta
+	/// (5) have no dedicated axis -> untyped.
+	std::optional<std::string> category_axis(std::int64_t category) {
+		switch (category) {
+		case 1: return std::string(search_keys::artist);
+		case 3: return std::string(search_keys::series);    // Danbooru "copyright" == franchise
+		case 4: return std::string(search_keys::character);
+		default: return std::nullopt;
+		}
+	}
+
 	/// The sorts this getter maps onto Danbooru `order:` metatags, both directions.
 	SupportedSorts supported_sorts() {
 		const SortDescriptor both{ .ascending = true, .descending = true };
@@ -106,10 +118,58 @@ namespace {
 
 NetworkRequestTask<SearchCompatibilities> DanbooruImagesGetter::search_support(RequestorContext) {
 	// Tags are open-vocabulary free text (the query string), so no enumerable
-	// filter set is advertised; only the mappable sorts are declared.
+	// filter set is advertised; only the mappable sorts are declared. Autocomplete
+	// is offered, and it can narrow to the artist axis (Danbooru's dedicated
+	// `search[type]=artist`); other categories ride the default tag query.
 	co_return SearchCompatibilities{
 	    .supported_sorts = supported_sorts(),
+	    .compatibilities = compatibilities_flags::default_flags | compatibilities_flags::supports_suggestions,
+	    .supported_suggestion_kinds = { std::string(search_keys::artist) },
 	};
+}
+
+NetworkRequestTask<std::vector<SearchSuggestion>> DanbooruImagesGetter::suggest(
+    RequestorContext context, std::string partial, std::optional<std::string> kind) {
+	// Danbooru's dedicated autocomplete. The only narrowing it offers as a distinct
+	// type is artist; anything else queries all tags and comes back typed per item.
+	std::string type = (kind && *kind == search_keys::artist) ? "artist" : "tag_query";
+
+	GetRequest request = { .url = format("{}/autocomplete.json", danbooru::get_api_base(context)) };
+	request.url_params.add("search[query]", std::move(partial));
+	request.url_params.add("search[type]", std::move(type));
+	request.url_params.add("limit", "10");
+
+	auto json_result = co_await context.request_json(request);
+	if (!json_result) {
+		co_return unexpected(std::move(json_result.error()));
+	}
+
+	std::vector<SearchSuggestion> suggestions;
+	const boost::json::array* items = json_result->if_array();
+	if (!items) {
+		co_return suggestions;
+	}
+	for (const boost::json::value& entry : *items) {
+		const boost::json::object* item = entry.if_object();
+		if (!item) {
+			continue;
+		}
+		SearchSuggestion suggestion;
+		suggestion.value = aniparse::json::str(item, "value");
+		if (suggestion.value.empty()) {
+			continue;
+		}
+		suggestion.label = aniparse::json::str(item, "label");
+		if (suggestion.label.empty()) {
+			suggestion.label = suggestion.value;
+		}
+		if (std::int64_t count = aniparse::json::integer(item, "post_count"); count > 0) {
+			suggestion.count = static_cast<long>(count);
+		}
+		suggestion.category = category_axis(aniparse::json::integer(item, "category"));
+		suggestions.push_back(std::move(suggestion));
+	}
+	co_return suggestions;
 }
 
 NetworkRequestTask<PageResults<std::unique_ptr<ImageContainerGetter>>> DanbooruImagesGetter::search(

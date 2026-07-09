@@ -22,6 +22,11 @@ class DanbooruImagesGetter : public ImagesGetter {
 public:
 	NetworkRequestTask<SearchCompatibilities> search_support(RequestorContext context) override;
 
+	NetworkRequestTask<std::vector<SearchSuggestion>> suggest(
+	    RequestorContext context,
+	    std::string partial,
+	    std::optional<std::string> kind) override;
+
 	NetworkRequestTask<PageResults<std::unique_ptr<ImageContainerGetter>>> search(
 	    RequestorContext context,
 	    SearchRequestQuery query,

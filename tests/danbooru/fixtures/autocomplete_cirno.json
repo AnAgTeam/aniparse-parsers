@@ -1,0 +1,6 @@
+[
+  { "type": "tag_query", "label": "cirno",          "value": "cirno",          "category": 4, "post_count": 90000 },
+  { "type": "tag_query", "label": "cirno_(cosplay)", "value": "cirno_(cosplay)", "category": 4, "post_count": 1200 },
+  { "type": "tag_query", "label": "cirnyaa",         "value": "cirnyaa",         "category": 1, "post_count": 500 },
+  { "type": "tag_query", "label": "touhou",          "value": "touhou",          "category": 3, "post_count": 900000 }
+]

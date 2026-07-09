@@ -50,4 +50,19 @@ inline coro::task<void> assert_search_shape(aniparse::RequestorContext context, 
 	}
 }
 
+// Structural invariants of Danbooru autocomplete, shared by the fixture and live
+// suggest tests: some suggestions come back, and each carries an insertable token.
+inline coro::task<void> assert_suggest_shape(aniparse::RequestorContext context, std::string partial) {
+	using namespace aniparse;
+
+	parsers::DanbooruImagesGetter getter;
+	auto result = co_await getter.suggest(context, std::move(partial), std::nullopt);
+	REQUIRE(result.has_value());
+	CHECK_FALSE(result->empty());
+	for (const auto& suggestion : *result) {
+		CHECK_FALSE(suggestion.value.empty());
+		CHECK_FALSE(suggestion.label.empty());
+	}
+}
+
 } // namespace danbooru_checks
