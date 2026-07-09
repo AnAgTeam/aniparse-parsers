@@ -33,7 +33,7 @@ std::shared_ptr<parsertest::CannedClientMock> page_mock() {
 
 } // namespace
 
-CORO_TEST_CASE("search maps a posts page into container getters") {
+CORO_TEST_CASE("search maps a posts page into container getters", "[danbooru]") {
 	auto mock = page_mock();
 	RequestorContext context = context_over(mock);
 
@@ -80,13 +80,13 @@ CORO_TEST_CASE("search maps a posts page into container getters") {
 // One test, two data sources: the fixture by default (deterministic, runs in CI) and
 // the real danbooru.donmai.us under ANIPARSE_TEST_LIVE=1 — same assertions, no second
 // copy of the test and nothing backend-specific here.
-CORO_TEST_CASE("Danbooru: search shape (fixture by default, live under ANIPARSE_TEST_LIVE)", "[live]") {
+CORO_TEST_CASE("Danbooru: search shape (fixture by default, live under ANIPARSE_TEST_LIVE)", "[danbooru][live]") {
 	parsers::DanbooruParser parser;
 	RequestorContext context = data_context(parser, "danbooru/fixtures/posts_page.json");
 	co_await danbooru_checks::assert_search_shape(context, "cirno rating:general");
 }
 
-CORO_TEST_CASE("search builds the /posts.json request with tags, page and limit") {
+CORO_TEST_CASE("search builds the /posts.json request with tags, page and limit", "[danbooru]") {
 	auto mock = page_mock();
 	RequestorContext context = context_over(mock);
 
@@ -104,7 +104,7 @@ CORO_TEST_CASE("search builds the /posts.json request with tags, page and limit"
 	CHECK(req.url_params.get("limit") == "20");
 }
 
-CORO_TEST_CASE("search folds a supported sort into an order: metatag") {
+CORO_TEST_CASE("search folds a supported sort into an order: metatag", "[danbooru]") {
 	auto mock = page_mock();
 	RequestorContext context = context_over(mock);
 

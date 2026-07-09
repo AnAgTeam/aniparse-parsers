@@ -26,7 +26,7 @@ boost::json::value load_post(std::string_view name) {
 
 } // namespace
 
-TEST_CASE("still post maps every tag category in append order") {
+TEST_CASE("still post maps every tag category in append order", "[danbooru]") {
 	boost::json::value doc = load_post("post_still.json");
 	aniparse::ImageContainerInfo info = danbooru::post_to_container_info(doc.as_object());
 
@@ -48,7 +48,7 @@ TEST_CASE("still post maps every tag category in append order") {
 	CHECK(info.tags[2].ref == "cirno");
 }
 
-TEST_CASE("still post synthesizes title and maps container metadata") {
+TEST_CASE("still post synthesizes title and maps container metadata", "[danbooru]") {
 	boost::json::value doc = load_post("post_still.json");
 	aniparse::ImageContainerInfo info = danbooru::post_to_container_info(doc.as_object());
 
@@ -64,7 +64,7 @@ TEST_CASE("still post synthesizes title and maps container metadata") {
 	CHECK(info.age_restriction == 0);
 }
 
-TEST_CASE("still post maps its single media leaf") {
+TEST_CASE("still post maps its single media leaf", "[danbooru]") {
 	boost::json::value doc = load_post("post_still.json");
 	std::optional<aniparse::ImageItem> item = danbooru::post_to_item(doc.as_object());
 
@@ -79,7 +79,7 @@ TEST_CASE("still post maps its single media leaf") {
 	CHECK(item->image.headers.empty());
 }
 
-TEST_CASE("webm post is Video with a poster") {
+TEST_CASE("webm post is Video with a poster", "[danbooru]") {
 	boost::json::value doc = load_post("post_video.json");
 	std::optional<aniparse::ImageItem> item = danbooru::post_to_item(doc.as_object());
 
@@ -89,7 +89,7 @@ TEST_CASE("webm post is Video with a poster") {
 	CHECK(item->poster->url == "https://cdn.example-booru.test/data/preview/clip_5000002.jpg");
 }
 
-TEST_CASE("ugoira swaps the zip for a playable sample variant") {
+TEST_CASE("ugoira swaps the zip for a playable sample variant", "[danbooru]") {
 	boost::json::value doc = load_post("post_ugoira.json");
 	std::optional<aniparse::ImageItem> item = danbooru::post_to_item(doc.as_object());
 
@@ -99,7 +99,7 @@ TEST_CASE("ugoira swaps the zip for a playable sample variant") {
 	CHECK(item->image.url == "https://cdn.example-booru.test/data/sample/ugoira_5000003.webm");
 }
 
-TEST_CASE("banned post yields metadata but no media leaf") {
+TEST_CASE("banned post yields metadata but no media leaf", "[danbooru]") {
 	boost::json::value doc = load_post("post_banned.json");
 
 	// A null file_url means no servable file -> no media item.
@@ -112,7 +112,7 @@ TEST_CASE("banned post yields metadata but no media leaf") {
 	CHECK_FALSE(info.tags.empty());
 }
 
-TEST_CASE("derive_kind maps file extensions to media kinds") {
+TEST_CASE("derive_kind maps file extensions to media kinds", "[danbooru]") {
 	CHECK(danbooru::derive_kind("webm") == ImageItemKind::Video);
 	CHECK(danbooru::derive_kind("mp4") == ImageItemKind::Video);
 	CHECK(danbooru::derive_kind("gif") == ImageItemKind::Animated);
@@ -122,7 +122,7 @@ TEST_CASE("derive_kind maps file extensions to media kinds") {
 	CHECK(danbooru::derive_kind("webp") == ImageItemKind::Still);
 }
 
-TEST_CASE("rating drives the hentai marker and age restriction") {
+TEST_CASE("rating drives the hentai marker and age restriction", "[danbooru]") {
 	// A one-field object — exercises the rating branch with no media, no content.
 	auto info_for = [](const char* rating) {
 		boost::json::object post;
@@ -138,7 +138,7 @@ TEST_CASE("rating drives the hentai marker and age restriction") {
 	CHECK(info_for("e").age_restriction == 18);
 }
 
-TEST_CASE("extract_post_id reads the digits after /posts/") {
+TEST_CASE("extract_post_id reads the digits after /posts/", "[danbooru]") {
 	CHECK(danbooru::extract_post_id("/posts/12345") == 12345);
 	CHECK(danbooru::extract_post_id("/posts/12345/some-slug") == 12345);
 	CHECK(danbooru::extract_post_id("https://danbooru.donmai.us/posts/678?q=x") == 678);
