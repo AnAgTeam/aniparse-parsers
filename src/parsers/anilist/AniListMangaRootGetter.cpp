@@ -103,8 +103,8 @@ namespace {
 		}
 		// GetFilters::from is an item offset; the fetched page starts on a page
 		// boundary, so skip into it and number items from the absolute offset.
-		const pageoff skip = filters.from % per_page;
-		for (pageoff index = skip; index < static_cast<pageoff>(media->size()); ++index) {
+		const OffsetPaging paging{ .from = filters.from, .stride = per_page };
+		for (pageoff index = paging.skip(); index < static_cast<pageoff>(media->size()); ++index) {
 			if (results.results.size() >= filters.limit) {
 				break;
 			}
@@ -116,14 +116,12 @@ namespace {
 			if (id <= 0) {
 				continue;
 			}
-			results.results.emplace_back(
-			    std::make_unique<AniListMangaGetter>(id, anilist::media_to_preview(*item)),
-			    filters.from + static_cast<pageoff>(results.results.size()));
+			results.append(filters.from,
+			    std::make_unique<AniListMangaGetter>(id, anilist::media_to_preview(*item)));
 		}
 		if (const boost::json::object* info = aniparse::json::object_field(page, "pageInfo")) {
 			results.total_count = static_cast<std::size_t>(aniparse::json::integer(*info, "total"));
 		}
-		results.next_offset = filters.from + static_cast<pageoff>(results.results.size());
 		return results;
 	}
 } // namespace
@@ -184,7 +182,7 @@ NetworkRequestTask<PageResults<std::unique_ptr<MangaGetter>>> AniListMangaRootGe
 	}
 
 	boost::json::object variables;
-	variables["page"]    = filters.from / per_page + 1;
+	variables["page"]    = OffsetPaging{ .from = filters.from, .stride = per_page }.page();
 	variables["perPage"] = per_page;
 	if (!query.query.empty()) {
 		variables["search"] = query.query;
@@ -223,7 +221,7 @@ NetworkRequestTask<PageResults<std::unique_ptr<MangaGetter>>> AniListMangaRootGe
 	}
 
 	boost::json::object variables;
-	variables["page"]    = filters.from / per_page + 1;
+	variables["page"]    = OffsetPaging{ .from = filters.from, .stride = per_page }.page();
 	variables["perPage"] = per_page;
 	variables["sort"]    = boost::json::array{ boost::json::string("UPDATED_AT_DESC") };
 

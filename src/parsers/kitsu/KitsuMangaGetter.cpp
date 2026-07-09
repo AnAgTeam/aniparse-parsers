@@ -8,24 +8,11 @@
 #include "aniparse/json/Json.hpp"
 #include "aniparse/utility/Coroutines.hpp"
 #include "aniparse/utility/Format.hpp"
+#include "aniparse/utility/UrlPath.hpp"
 
 #include <boost/json.hpp>
 
 namespace aniparse::parsers {
-
-namespace {
-	bool is_numeric(std::string_view ref) {
-		if (ref.empty()) {
-			return false;
-		}
-		for (char c : ref) {
-			if (c < '0' || c > '9') {
-				return false;
-			}
-		}
-		return true;
-	}
-} // namespace
 
 KitsuMangaGetter::KitsuMangaGetter(std::string ref, std::optional<MangaInfo> preview)
     : ref_(std::move(ref)), preview_(std::move(preview)) {}
@@ -45,7 +32,7 @@ NetworkRequestTask<MangaInfo> KitsuMangaGetter::info(RequestorContext context) {
 	// A numeric ref addresses the resource directly (/manga/{id}); a slug is
 	// resolved through the collection filter (/manga?filter[slug]=). Categories
 	// are sideloaded so tags come back in one round-trip.
-	const bool numeric = is_numeric(ref_);
+	const bool numeric = all_digits(ref_);
 	GetRequest request = {
 	    .url = numeric ? format("{}/manga/{}", kitsu::get_api_base(context), ref_)
 	                   : format("{}/manga", kitsu::get_api_base(context)),

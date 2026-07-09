@@ -60,12 +60,10 @@ namespace {
 			if (ref.empty()) {
 				continue;
 			}
-			results.results.emplace_back(
-			    std::make_unique<KitsuMangaGetter>(std::move(ref), kitsu::media_to_preview(*resource)),
-			    filters.from + static_cast<pageoff>(results.results.size()));
+			results.append(filters.from,
+			    std::make_unique<KitsuMangaGetter>(std::move(ref), kitsu::media_to_preview(*resource)));
 		}
 		results.total_count = kitsu::meta_count(envelope);
-		results.next_offset = filters.from + static_cast<pageoff>(results.results.size());
 		return results;
 	}
 
@@ -73,9 +71,7 @@ namespace {
 	GetRequest list_request(const RequestorContext& context, const GetFilters& filters,
 	                        std::string_view default_sort) {
 		GetRequest request = { .url = format("{}/manga", kitsu::get_api_base(context)) };
-		const pageoff limit = std::min<pageoff>(
-		    filters.limit == page_no_limit ? max_page_limit : static_cast<pageoff>(filters.limit),
-		    max_page_limit);
+		const pageoff limit = clamp_limit(filters, max_page_limit, max_page_limit);
 		request.url_params.add("page[limit]",  std::to_string(limit));
 		request.url_params.add("page[offset]", std::to_string(filters.from));
 		std::string sort{ default_sort };

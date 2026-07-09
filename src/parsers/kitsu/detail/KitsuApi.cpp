@@ -6,6 +6,7 @@
 #include "aniparse/parsers/kitsu/detail/KitsuApi.hpp"
 #include "aniparse/json/Json.hpp"
 #include "aniparse/ClientContext.hpp"
+#include "aniparse/utility/UrlPath.hpp"
 
 #include <boost/json.hpp>
 
@@ -110,20 +111,7 @@ std::size_t meta_count(const boost::json::value& envelope) {
 }
 
 std::optional<std::string> extract_ref(std::string_view path) {
-	constexpr std::string_view marker = "/manga/";
-	std::size_t pos = path.find(marker);
-	if (pos == std::string_view::npos) {
-		return std::nullopt;
-	}
-	pos += marker.size();
-	std::size_t end = pos;
-	while (end < path.size() && path[end] != '/' && path[end] != '?') {
-		++end;
-	}
-	if (end == pos) {
-		return std::nullopt;
-	}
-	return std::string(path.substr(pos, end - pos));
+	return segment_after(path, "/manga/");
 }
 
 MangaInfo media_to_preview(const boost::json::object& resource) {

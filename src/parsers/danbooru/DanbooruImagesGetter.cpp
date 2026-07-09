@@ -61,12 +61,10 @@ namespace {
 	/// if any, is folded into the tag string as an `order:` metatag.
 	GetRequest list_request(const RequestorContext& context, std::string tags,
 	                        const GetFilters& filters) {
-		const pageoff limit = std::min<pageoff>(
-		    filters.limit == page_no_limit ? default_limit : static_cast<pageoff>(filters.limit),
-		    max_page_limit);
+		const pageoff limit = clamp_limit(filters, max_page_limit, default_limit);
 		// GetFilters::from is a 0-based item offset; Danbooru pages by 1-based page
-		// number, so map offset -> page (deep paging past page 1000 is API-capped).
-		const pageoff page = limit > 0 ? filters.from / limit + 1 : 1;
+		// number (deep paging past page 1000 is API-capped).
+		const OffsetPaging paging{ .from = filters.from, .want = limit, .stride = limit };
 
 		if (filters.sort) {
 			if (std::optional<std::string> order = danbooru_order(*filters.sort)) {
@@ -81,7 +79,7 @@ namespace {
 		if (!tags.empty()) {
 			request.url_params.add("tags", std::move(tags));
 		}
-		request.url_params.add("page",  std::to_string(page));
+		request.url_params.add("page",  std::to_string(paging.page()));
 		request.url_params.add("limit", std::to_string(limit));
 		return request;
 	}
@@ -104,15 +102,13 @@ namespace {
 			if (id == invalid_image_container_id) {
 				continue;
 			}
-			results.results.emplace_back(
-			    std::make_unique<DanbooruContainerGetter>(
-			        id,
-			        danbooru::post_to_container_info(*post),
-			        danbooru::post_to_item(*post)),
-			    filters.from + static_cast<pageoff>(results.results.size()));
+			results.append(filters.from, std::make_unique<DanbooruContainerGetter>(
+			    id,
+			    danbooru::post_to_container_info(*post),
+			    danbooru::post_to_item(*post)));
 		}
-		// The collection endpoint returns no total; report what this page yielded.
-		results.next_offset = filters.from + static_cast<pageoff>(results.results.size());
+		// The collection endpoint returns no total; next_offset (set by append)
+		// reports what this page yielded.
 		return results;
 	}
 } // namespace

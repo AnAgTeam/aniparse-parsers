@@ -6,6 +6,7 @@
 #include "aniparse/parsers/gelbooru/detail/GelbooruApi.hpp"
 #include "aniparse/json/Json.hpp"
 #include "aniparse/ClientContext.hpp"
+#include "aniparse/utility/UrlPath.hpp"
 
 #include <boost/json.hpp>
 
@@ -77,21 +78,9 @@ Headers media_headers() {
 }
 
 std::optional<ImageContainerID> extract_id(std::string_view query) {
-	constexpr std::string_view marker = "id=";
-	std::size_t pos = query.find(marker);
-	while (pos != std::string_view::npos) {
-		// Require a boundary before "id=" so "parent_id=" / "pool_id=" do not match.
-		if (pos == 0 || query[pos - 1] == '&' || query[pos - 1] == '?') {
-			std::size_t value = pos + marker.size();
-			std::size_t end = value;
-			while (end < query.size() && query[end] >= '0' && query[end] <= '9') {
-				++end;
-			}
-			if (end > value) {
-				return static_cast<ImageContainerID>(std::atol(std::string(query.substr(value, end - value)).c_str()));
-			}
-		}
-		pos = query.find(marker, pos + marker.size());
+	// Require a boundary before "id=" so "parent_id=" / "pool_id=" do not match.
+	if (auto id = numeric_after(query, "id=", /*require_boundary=*/true)) {
+		return static_cast<ImageContainerID>(*id);
 	}
 	return std::nullopt;
 }

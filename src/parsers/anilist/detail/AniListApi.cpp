@@ -6,6 +6,7 @@
 #include "aniparse/parsers/anilist/detail/AniListApi.hpp"
 #include "aniparse/json/Json.hpp"
 #include "aniparse/ClientContext.hpp"
+#include "aniparse/utility/UrlPath.hpp"
 
 #include <boost/json.hpp>
 
@@ -104,21 +105,10 @@ std::string graphql_error(const boost::json::value& envelope) {
 }
 
 std::optional<int> extract_media_id(std::string_view path) {
-	constexpr std::string_view marker = "/manga/";
-	std::size_t pos = path.find(marker);
-	if (pos == std::string_view::npos) {
-		return std::nullopt;
+	if (auto id = numeric_after(path, "/manga/")) {
+		return static_cast<int>(*id);
 	}
-	pos += marker.size();
-	const std::size_t start = pos;
-	int id = 0;
-	for (; pos < path.size() && path[pos] >= '0' && path[pos] <= '9'; ++pos) {
-		id = id * 10 + (path[pos] - '0');
-	}
-	if (pos == start) {
-		return std::nullopt;
-	}
-	return id;
+	return std::nullopt;
 }
 
 std::string display_title(const boost::json::object& media) {

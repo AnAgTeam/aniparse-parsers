@@ -6,6 +6,7 @@
 #include "aniparse/parsers/danbooru/detail/DanbooruApi.hpp"
 #include "aniparse/json/Json.hpp"
 #include "aniparse/ClientContext.hpp"
+#include "aniparse/utility/UrlPath.hpp"
 
 #include <boost/json.hpp>
 
@@ -96,31 +97,18 @@ Headers api_headers() {
 	};
 }
 
-namespace {
-	/// The digits immediately after @p marker in @p path, as an id.
-	std::optional<ImageContainerID> extract_id_after(std::string_view path, std::string_view marker) {
-		std::size_t pos = path.find(marker);
-		if (pos == std::string_view::npos) {
-			return std::nullopt;
-		}
-		pos += marker.size();
-		std::size_t end = pos;
-		while (end < path.size() && path[end] >= '0' && path[end] <= '9') {
-			++end;
-		}
-		if (end == pos) {
-			return std::nullopt;
-		}
-		return static_cast<ImageContainerID>(std::atol(std::string(path.substr(pos, end - pos)).c_str()));
-	}
-} // namespace
-
 std::optional<ImageContainerID> extract_post_id(std::string_view path) {
-	return extract_id_after(path, "/posts/");
+	if (auto id = numeric_after(path, "/posts/")) {
+		return static_cast<ImageContainerID>(*id);
+	}
+	return std::nullopt;
 }
 
 std::optional<ImageContainerID> extract_pool_id(std::string_view path) {
-	return extract_id_after(path, "/pools/");
+	if (auto id = numeric_after(path, "/pools/")) {
+		return static_cast<ImageContainerID>(*id);
+	}
+	return std::nullopt;
 }
 
 ImageItemKind derive_kind(std::string_view file_ext) {
