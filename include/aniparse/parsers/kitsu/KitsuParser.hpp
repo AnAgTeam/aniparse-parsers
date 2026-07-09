@@ -17,7 +17,7 @@ namespace aniparse::parsers {
  */
 class KitsuParser : public Parser {
 public:
-	std::string name() const override;
+	ParserInfo info() const override;
 	std::string identifier() const override;
 	GetterSuggestionType suggest_getter(const ParsedUrl& url) const override;
 	ParserCompatibilities compatibilities() const override;

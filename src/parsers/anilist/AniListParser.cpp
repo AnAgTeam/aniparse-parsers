@@ -9,8 +9,11 @@
 
 namespace aniparse::parsers {
 
-std::string AniListParser::name() const {
-	return "AniList";
+ParserInfo AniListParser::info() const {
+	return {
+	    .name             = "AniList",
+	    .primary_language = "en",
+	};
 }
 
 std::string AniListParser::identifier() const {
@@ -27,8 +30,7 @@ GetterSuggestionType AniListParser::suggest_getter(const ParsedUrl& url) const {
 
 ParserCompatibilities AniListParser::compatibilities() const {
 	return {
-	    .primary_language = "en",
-	    .flags            = compatibilities_flags::supports_manga_store,
+	    .flags = compatibilities_flags::supports_manga_store,
 	};
 }
 

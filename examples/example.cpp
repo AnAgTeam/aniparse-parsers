@@ -209,7 +209,7 @@ static coro::task<void> route_and_show(ParserStore& store, RequestorContext base
 		co_return;
 	}
 	RequestorContext context = base.new_with_config(route->parser->make_config(base.config()));
-	std::println("  routed to '{}'", route->parser->name());
+	std::println("  routed to '{}'", route->parser->info().name);
 	auto getter = co_await route->parser->mangas_getter()->parse_url(context, std::move(route->url));
 	if (!getter) {
 		std::println("  parse_url failed: {}\n", error_line(getter.error()));

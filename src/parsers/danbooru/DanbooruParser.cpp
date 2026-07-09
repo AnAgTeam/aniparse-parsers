@@ -9,8 +9,11 @@
 
 namespace aniparse::parsers {
 
-std::string DanbooruParser::name() const {
-	return "Danbooru";
+ParserInfo DanbooruParser::info() const {
+	return {
+	    .name             = "Danbooru",
+	    .primary_language = "en",
+	};
 }
 
 std::string DanbooruParser::identifier() const {
@@ -31,9 +34,8 @@ ParserCompatibilities DanbooruParser::compatibilities() const {
 	// honestly; the read-path itself defaults to nothing and callers pass their
 	// own rating filter).
 	return {
-	    .primary_language = "en",
-	    .flags            = compatibilities_flags::supports_images_search
-	                      | compatibilities_flags::adult_source,
+	    .flags = compatibilities_flags::supports_images_search
+	           | compatibilities_flags::adult_source,
 	};
 }
 

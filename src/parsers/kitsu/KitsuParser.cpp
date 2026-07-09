@@ -9,8 +9,11 @@
 
 namespace aniparse::parsers {
 
-std::string KitsuParser::name() const {
-	return "Kitsu";
+ParserInfo KitsuParser::info() const {
+	return {
+	    .name             = "Kitsu",
+	    .primary_language = "en",
+	};
 }
 
 std::string KitsuParser::identifier() const {
@@ -26,8 +29,7 @@ GetterSuggestionType KitsuParser::suggest_getter(const ParsedUrl& url) const {
 
 ParserCompatibilities KitsuParser::compatibilities() const {
 	return {
-	    .primary_language = "en",
-	    .flags            = compatibilities_flags::supports_manga_store,
+	    .flags = compatibilities_flags::supports_manga_store,
 	};
 }
 

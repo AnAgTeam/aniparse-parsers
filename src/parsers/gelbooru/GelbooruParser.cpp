@@ -14,8 +14,11 @@
 
 namespace aniparse::parsers {
 
-std::string GelbooruParser::name() const {
-	return "Gelbooru";
+ParserInfo GelbooruParser::info() const {
+	return {
+	    .name             = "Gelbooru",
+	    .primary_language = "en",
+	};
 }
 
 std::string GelbooruParser::identifier() const {
@@ -31,9 +34,8 @@ GetterSuggestionType GelbooruParser::suggest_getter(const ParsedUrl& url) const 
 
 ParserCompatibilities GelbooruParser::compatibilities() const {
 	return {
-	    .primary_language = "en",
-	    .flags            = compatibilities_flags::supports_images_search
-	                      | compatibilities_flags::adult_source,
+	    .flags = compatibilities_flags::supports_images_search
+	           | compatibilities_flags::adult_source,
 	};
 }
 
