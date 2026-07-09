@@ -46,6 +46,13 @@ add_library(aniparse-parsers STATIC
 set_property(TARGET aniparse-parsers PROPERTY CXX_STANDARD 20)
 set_property(TARGET aniparse-parsers PROPERTY CXX_STANDARD_REQUIRED ON)
 
+# Match the core's warning bar so parser code is held to the same standard (a
+# narrowing/signedness slip in a parser is as real as one in the library).
+target_compile_options(aniparse-parsers PRIVATE
+	$<$<CXX_COMPILER_ID:MSVC>:/W4>
+	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic>
+)
+
 # Opt-in MSVC static lifetime analysis (a separate, slow CI leg — not per-build).
 # The C++ Core Guidelines lifetime rules catch dangling views/pointers at compile
 # time (e.g. `std::string_view v = json::str(...)` -> C26815/C26449). Scoped to
