@@ -76,7 +76,7 @@ CORO_TEST_CASE("suggest advertises the capability in search_support", "[danbooru
 	DanbooruImagesGetter getter;
 	auto support = co_await getter.search_support(context);
 	REQUIRE(support.has_value());
-	CHECK(support->compatibilities.test(compatibilities_flags::supports_suggestions));
+	CHECK(support->compatibilities.has(compatibilities_flags::supports_suggestions));
 	REQUIRE(support->supported_suggestion_kinds.size() == 1);
 	CHECK(support->supported_suggestion_kinds.front() == search_keys::artist);
 }
