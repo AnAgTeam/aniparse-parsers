@@ -3,45 +3,32 @@
  *
  * Author: Toilettrauma <macosinternal@gmail.com>
  */
-#include "catch_amalgamated.hpp"
+#include "support/ParserTest.hpp"
 
 #include "aniparse/parsers/danbooru/detail/DanbooruApi.hpp"
 
 #include <boost/json.hpp>
 
-#include <fstream>
-#include <sstream>
-#include <string>
-
 // Deterministic mapping tests over synthetic, schema-faithful Danbooru fixtures
-// (see tests/fixtures/danbooru/*.json). These drive only the pure mapping surface
-// of DanbooruApi.hpp — no network, no live host — so they gate the exact layer that
+// (see danbooru/fixtures/*.json). These drive only the pure mapping surface of
+// DanbooruApi.hpp — no network, no live host — so they gate the exact layer that
 // carried the dangling tag-undercount bug and run clean under AddressSanitizer.
 
 namespace danbooru = aniparse::parsers::danbooru;
 using aniparse::ImageItemKind;
+using aniparse::parsertest::load_fixture_json;
 
 namespace {
 
-boost::json::value load_fixture(std::string_view name) {
-	std::string path = std::string(ANIPARSE_PARSERS_TEST_FIXTURES_DIR) + "/danbooru/" + std::string(name);
-	std::ifstream in(path, std::ios::binary);
-	INFO("fixture: " << path);
-	REQUIRE(in.good());
-	std::ostringstream buffer;
-	buffer << in.rdbuf();
-	return boost::json::parse(buffer.str());
-}
-
-const boost::json::object& fixture_object(boost::json::value& doc) {
-	return doc.as_object();
+boost::json::value load_post(std::string_view name) {
+	return load_fixture_json(std::string("danbooru/fixtures/") + std::string(name));
 }
 
 } // namespace
 
 TEST_CASE("still post maps every tag category in append order") {
-	boost::json::value doc = load_fixture("post_still.json");
-	aniparse::ImageContainerInfo info = danbooru::post_to_container_info(fixture_object(doc));
+	boost::json::value doc = load_post("post_still.json");
+	aniparse::ImageContainerInfo info = danbooru::post_to_container_info(doc.as_object());
 
 	// 1 artist + 1 copyright + 1 character + 40 general + 2 meta = 45. The old
 	// dangling bug truncated this to ~5, so the exact count is the regression guard.
@@ -62,8 +49,8 @@ TEST_CASE("still post maps every tag category in append order") {
 }
 
 TEST_CASE("still post synthesizes title and maps container metadata") {
-	boost::json::value doc = load_fixture("post_still.json");
-	aniparse::ImageContainerInfo info = danbooru::post_to_container_info(fixture_object(doc));
+	boost::json::value doc = load_post("post_still.json");
+	aniparse::ImageContainerInfo info = danbooru::post_to_container_info(doc.as_object());
 
 	CHECK(info.id == 5000001);
 	CHECK(info.title == "cirno (touhou_project)");
@@ -78,8 +65,8 @@ TEST_CASE("still post synthesizes title and maps container metadata") {
 }
 
 TEST_CASE("still post maps its single media leaf") {
-	boost::json::value doc = load_fixture("post_still.json");
-	std::optional<aniparse::ImageItem> item = danbooru::post_to_item(fixture_object(doc));
+	boost::json::value doc = load_post("post_still.json");
+	std::optional<aniparse::ImageItem> item = danbooru::post_to_item(doc.as_object());
 
 	REQUIRE(item.has_value());
 	CHECK(item->kind == ImageItemKind::Still);
@@ -93,8 +80,8 @@ TEST_CASE("still post maps its single media leaf") {
 }
 
 TEST_CASE("webm post is Video with a poster") {
-	boost::json::value doc = load_fixture("post_video.json");
-	std::optional<aniparse::ImageItem> item = danbooru::post_to_item(fixture_object(doc));
+	boost::json::value doc = load_post("post_video.json");
+	std::optional<aniparse::ImageItem> item = danbooru::post_to_item(doc.as_object());
 
 	REQUIRE(item.has_value());
 	CHECK(item->kind == ImageItemKind::Video);
@@ -103,8 +90,8 @@ TEST_CASE("webm post is Video with a poster") {
 }
 
 TEST_CASE("ugoira swaps the zip for a playable sample variant") {
-	boost::json::value doc = load_fixture("post_ugoira.json");
-	std::optional<aniparse::ImageItem> item = danbooru::post_to_item(fixture_object(doc));
+	boost::json::value doc = load_post("post_ugoira.json");
+	std::optional<aniparse::ImageItem> item = danbooru::post_to_item(doc.as_object());
 
 	REQUIRE(item.has_value());
 	// zip alone derives to Animated; the sample-variant swap upgrades it to Video.
@@ -113,13 +100,13 @@ TEST_CASE("ugoira swaps the zip for a playable sample variant") {
 }
 
 TEST_CASE("banned post yields metadata but no media leaf") {
-	boost::json::value doc = load_fixture("post_banned.json");
+	boost::json::value doc = load_post("post_banned.json");
 
 	// A null file_url means no servable file -> no media item.
-	CHECK_FALSE(danbooru::post_to_item(fixture_object(doc)).has_value());
+	CHECK_FALSE(danbooru::post_to_item(doc.as_object()).has_value());
 
 	// The surviving metadata still maps (container-of-one keeps its info).
-	aniparse::ImageContainerInfo info = danbooru::post_to_container_info(fixture_object(doc));
+	aniparse::ImageContainerInfo info = danbooru::post_to_container_info(doc.as_object());
 	CHECK(info.id == 5000004);
 	CHECK(info.title == "cirno (original)");
 	CHECK_FALSE(info.tags.empty());

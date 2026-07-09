@@ -4,15 +4,9 @@
  * Author: Toilettrauma <macosinternal@gmail.com>
  */
 #include "CoroTest.hpp"
+#include "support/ParserTest.hpp"
 
 #include "aniparse/parsers/danbooru/DanbooruImagesGetter.hpp"
-#include "aniparse/ClientContext.hpp"
-#include "aniparse/CookieJar.hpp"
-
-#include <fstream>
-#include <memory>
-#include <sstream>
-#include <string>
 
 // Whole-method tests for the Danbooru search path, driven through a canned client
 // so the REAL getter code runs offline: search() -> list_request -> request_json ->
@@ -20,80 +14,24 @@
 // building and the page-loop wiring (including a banned post mid-page), none of which
 // the pure per-post mapping tests reach — those functions live in an anonymous
 // namespace and are only callable through the public method. Runs under ASan.
+// The client double and fixture loader are shared (support/ParserTest.hpp).
 
 using namespace aniparse;
 using aniparse::parsers::DanbooruImagesGetter;
+using aniparse::parsertest::context_over;
+using aniparse::parsertest::make_mock;
+using aniparse::parsertest::read_fixture;
 
 namespace {
 
-std::string load_body(std::string_view name) {
-	std::string path = std::string(ANIPARSE_PARSERS_TEST_FIXTURES_DIR) + "/danbooru/" + std::string(name);
-	std::ifstream in(path, std::ios::binary);
-	INFO("fixture: " << path);
-	REQUIRE(in.good());
-	std::ostringstream buffer;
-	buffer << in.rdbuf();
-	return buffer.str();
-}
-
-struct DummyCookieJar : CookieJar {
-	std::optional<Cookie> find_cookie(std::string_view) const override { return std::nullopt; }
-	std::vector<Cookie> cookies() const override { return {}; }
-	void set_cookie(const Cookie&) override {}
-	void clear() override {}
-	std::vector<std::string> serialize() const override { return {}; }
-	void deserialize(std::span<std::string>) override {}
-};
-
-struct DummyLogger : LoggerContext {
-	void log(LogLevel, std::string_view, std::source_location) override {}
-};
-
-// Returns a preset response for every request and records the last one it received,
-// so a test can assert both the mapped result and the request the getter built.
-struct CannedClientMock : ClientContext {
-	explicit CannedClientMock(Response<ResponseData> response)
-		: response(std::move(response)) {}
-
-	NetworkRequestTask<ResponseData> do_request(ConfiguredGetRequest request) override {
-		this->request = std::move(request);
-		co_return response;
-	}
-	NetworkRequestTask<ResponseData> do_request(ConfiguredPostRequest request) override {
-		this->request = std::move(request);
-		co_return response;
-	}
-	NetworkRequestTask<ResponseData> do_request(ConfiguredPostMultipartRequest request) override {
-		this->request = std::move(request);
-		co_return response;
-	}
-	void set_config(ClientConfig) override {}
-	std::shared_ptr<CookieJar> make_cookie_jar() override { return std::make_shared<DummyCookieJar>(); }
-
-	std::variant<std::monostate,
-	             ConfiguredGetRequest,
-	             ConfiguredPostRequest,
-	             ConfiguredPostMultipartRequest> request;
-	Response<ResponseData> response;
-};
-
-// A context whose client replays `body` with a 200; the returned mock handle lets
-// the caller inspect the request the getter built.
-std::shared_ptr<CannedClientMock> make_mock(std::string body) {
-	return std::make_shared<CannedClientMock>(
-	    ResponseData{ .status_code = 200, .body = std::move(body) });
-}
-
-RequestorContext context_over(std::shared_ptr<CannedClientMock> mock) {
-	return RequestorContext(std::move(mock),
-	                        std::make_shared<DummyLogger>(),
-	                        std::make_shared<ParserConfig>());
+std::shared_ptr<parsertest::CannedClientMock> page_mock() {
+	return make_mock(read_fixture("danbooru/fixtures/posts_page.json"));
 }
 
 } // namespace
 
 CORO_TEST_CASE("search maps a posts page into container getters") {
-	auto mock = make_mock(load_body("posts_page.json"));
+	auto mock = page_mock();
 	RequestorContext context = context_over(mock);
 
 	DanbooruImagesGetter getter;
@@ -137,7 +75,7 @@ CORO_TEST_CASE("search maps a posts page into container getters") {
 }
 
 CORO_TEST_CASE("search builds the /posts.json request with tags, page and limit") {
-	auto mock = make_mock(load_body("posts_page.json"));
+	auto mock = page_mock();
 	RequestorContext context = context_over(mock);
 
 	DanbooruImagesGetter getter;
@@ -155,7 +93,7 @@ CORO_TEST_CASE("search builds the /posts.json request with tags, page and limit"
 }
 
 CORO_TEST_CASE("search folds a supported sort into an order: metatag") {
-	auto mock = make_mock(load_body("posts_page.json"));
+	auto mock = page_mock();
 	RequestorContext context = context_over(mock);
 
 	GetFilters filters;
