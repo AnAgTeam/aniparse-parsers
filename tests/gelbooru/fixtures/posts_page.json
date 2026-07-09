@@ -1,0 +1,30 @@
+{
+  "_fixture": "Synthetic Gelbooru DAPI post-index envelope (page=dapi&s=post&json=1). Safe ratings, no media bytes; URLs are placeholders on the img4 host shape.",
+  "@attributes": { "limit": 100, "offset": 0, "count": 2 },
+  "post": [
+    {
+      "id": 8000001,
+      "file_url": "https://img4.gelbooru.com/images/ab/cd/abcd0001.png",
+      "sample_url": "https://img4.gelbooru.com/samples/ab/cd/sample_abcd0001.jpg",
+      "preview_url": "https://img4.gelbooru.com/thumbnails/ab/cd/thumbnail_abcd0001.jpg",
+      "width": 1200,
+      "height": 1600,
+      "tags": "1girl solo cat_ears cirno touhou highres",
+      "rating": "general",
+      "change": 1750000000,
+      "owner": "example_uploader"
+    },
+    {
+      "id": 8000002,
+      "file_url": "https://img4.gelbooru.com/images/ef/01/ef010002.webm",
+      "sample_url": "",
+      "preview_url": "https://img4.gelbooru.com/thumbnails/ef/01/thumbnail_ef010002.jpg",
+      "width": 1280,
+      "height": 720,
+      "tags": "1girl solo animated video",
+      "rating": "sensitive",
+      "change": 1750000100,
+      "owner": "example_uploader"
+    }
+  ]
+}

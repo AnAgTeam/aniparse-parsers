@@ -14,6 +14,10 @@ add_executable(aniparse-parsers-tests
 	"danbooru/SearchTest.cpp"
 	"danbooru/SuggestTest.cpp"
 	"danbooru/PoolTest.cpp"
+	"gelbooru/GelbooruChecks.hpp"
+	"gelbooru/MappingTest.cpp"
+	"gelbooru/SearchTest.cpp"
+	"gelbooru/SuggestTest.cpp"
 )
 
 set_property(TARGET aniparse-parsers-tests PROPERTY CXX_STANDARD 23)

@@ -37,6 +37,10 @@ add_library(aniparse-parsers STATIC
 	"src/parsers/danbooru/DanbooruImagesGetter.cpp" "include/aniparse/parsers/danbooru/DanbooruImagesGetter.hpp"
 	"src/parsers/danbooru/DanbooruContainerGetter.cpp" "include/aniparse/parsers/danbooru/DanbooruContainerGetter.hpp"
 	"src/parsers/danbooru/DanbooruPoolGetter.cpp" "include/aniparse/parsers/danbooru/DanbooruPoolGetter.hpp"
+	"src/parsers/gelbooru/detail/GelbooruApi.cpp" "include/aniparse/parsers/gelbooru/detail/GelbooruApi.hpp"
+	"src/parsers/gelbooru/GelbooruParser.cpp" "include/aniparse/parsers/gelbooru/GelbooruParser.hpp"
+	"src/parsers/gelbooru/GelbooruImagesGetter.cpp" "include/aniparse/parsers/gelbooru/GelbooruImagesGetter.hpp"
+	"src/parsers/gelbooru/GelbooruContainerGetter.cpp" "include/aniparse/parsers/gelbooru/GelbooruContainerGetter.hpp"
 )
 
 set_property(TARGET aniparse-parsers PROPERTY CXX_STANDARD 20)
