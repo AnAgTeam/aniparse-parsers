@@ -36,6 +36,7 @@ add_library(aniparse-parsers STATIC
 	"src/parsers/danbooru/DanbooruParser.cpp" "include/aniparse/parsers/danbooru/DanbooruParser.hpp"
 	"src/parsers/danbooru/DanbooruImagesGetter.cpp" "include/aniparse/parsers/danbooru/DanbooruImagesGetter.hpp"
 	"src/parsers/danbooru/DanbooruContainerGetter.cpp" "include/aniparse/parsers/danbooru/DanbooruContainerGetter.hpp"
+	"src/parsers/danbooru/DanbooruPoolGetter.cpp" "include/aniparse/parsers/danbooru/DanbooruPoolGetter.hpp"
 )
 
 set_property(TARGET aniparse-parsers PROPERTY CXX_STANDARD 20)

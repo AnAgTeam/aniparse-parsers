@@ -5,6 +5,7 @@
  */
 #include "aniparse/parsers/danbooru/DanbooruImagesGetter.hpp"
 #include "aniparse/parsers/danbooru/DanbooruContainerGetter.hpp"
+#include "aniparse/parsers/danbooru/DanbooruPoolGetter.hpp"
 #include "aniparse/parsers/danbooru/detail/DanbooruApi.hpp"
 #include "aniparse/json/Json.hpp"
 #include "aniparse/utility/Coroutines.hpp"
@@ -209,12 +210,15 @@ NetworkRequestTask<PageResults<std::unique_ptr<ImageContainerGetter>>> DanbooruI
 
 NetworkRequestTask<std::unique_ptr<ImageContainerGetter>> DanbooruImagesGetter::parse_url(
     RequestorContext, ParsedUrl url) {
-	std::optional<ImageContainerID> id = danbooru::extract_post_id(url.path());
-	if (!id) {
-		co_return make_response_error(RequestErrorCode::InvalidArguments,
-		                              "URL carries no Danbooru post id");
+	// A pool URL is a container-of-many; a post URL is a container-of-one.
+	if (std::optional<ImageContainerID> pool = danbooru::extract_pool_id(url.path())) {
+		co_return std::make_unique<DanbooruPoolGetter>(*pool);
 	}
-	co_return std::make_unique<DanbooruContainerGetter>(*id);
+	if (std::optional<ImageContainerID> post = danbooru::extract_post_id(url.path())) {
+		co_return std::make_unique<DanbooruContainerGetter>(*post);
+	}
+	co_return make_response_error(RequestErrorCode::InvalidArguments,
+	                              "URL is neither a Danbooru post nor a pool");
 }
 
 NetworkRequestTask<std::unique_ptr<ImageContainerGetter>> DanbooruImagesGetter::from_serialized(
@@ -223,6 +227,13 @@ NetworkRequestTask<std::unique_ptr<ImageContainerGetter>> DanbooruImagesGetter::
 	if (data.url.empty()) {
 		co_return make_response_error(RequestErrorCode::InvalidArguments,
 		                              "serialized Danbooru getter carries no id");
+	}
+	// A pool serializes with a "pools/" prefix (@see DanbooruPoolGetter::serialize);
+	// a bare number is a post id.
+	constexpr std::string_view pool_prefix = "pools/";
+	if (data.url.starts_with(pool_prefix)) {
+		auto id = static_cast<ImageContainerID>(std::atol(data.url.c_str() + pool_prefix.size()));
+		co_return std::make_unique<DanbooruPoolGetter>(id);
 	}
 	auto id = static_cast<ImageContainerID>(std::atol(data.url.c_str()));
 	co_return std::make_unique<DanbooruContainerGetter>(id);

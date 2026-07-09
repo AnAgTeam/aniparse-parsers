@@ -1,0 +1,13 @@
+{
+  "_fixture": "Synthetic Danbooru /pools/{id}.json response. Safe, no media bytes.",
+  "id": 1234,
+  "name": "Touhou_-_Cirno_Collection",
+  "description": "A synthetic pool fixture for tests.",
+  "post_ids": [5000010, 5000011, 5000012],
+  "post_count": 3,
+  "category": "collection",
+  "is_active": true,
+  "is_deleted": false,
+  "created_at": "2026-01-10T00:00:00.000-05:00",
+  "updated_at": "2026-02-10T12:00:00.000-05:00"
+}

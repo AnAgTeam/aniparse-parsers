@@ -18,11 +18,12 @@ std::string DanbooruParser::identifier() const {
 }
 
 GetterSuggestionType DanbooruParser::suggest_getter(const ParsedUrl& url) const {
-	// Danbooru addresses a single post at /posts/{id}; everything routable here is
-	// an image container.
-	return url.path().find("/posts/") != std::string_view::npos
-	           ? GetterSuggestionType::Images
-	           : GetterSuggestionType::Unknown;
+	// Danbooru addresses a single post at /posts/{id} and an ordered set at
+	// /pools/{id}; both are image containers routed to the images getter.
+	const std::string_view path = url.path();
+	const bool is_container = path.find("/posts/") != std::string_view::npos
+	                       || path.find("/pools/") != std::string_view::npos;
+	return is_container ? GetterSuggestionType::Images : GetterSuggestionType::Unknown;
 }
 
 ParserCompatibilities DanbooruParser::compatibilities() const {

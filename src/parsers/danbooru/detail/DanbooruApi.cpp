@@ -96,21 +96,31 @@ Headers api_headers() {
 	};
 }
 
+namespace {
+	/// The digits immediately after @p marker in @p path, as an id.
+	std::optional<ImageContainerID> extract_id_after(std::string_view path, std::string_view marker) {
+		std::size_t pos = path.find(marker);
+		if (pos == std::string_view::npos) {
+			return std::nullopt;
+		}
+		pos += marker.size();
+		std::size_t end = pos;
+		while (end < path.size() && path[end] >= '0' && path[end] <= '9') {
+			++end;
+		}
+		if (end == pos) {
+			return std::nullopt;
+		}
+		return static_cast<ImageContainerID>(std::atol(std::string(path.substr(pos, end - pos)).c_str()));
+	}
+} // namespace
+
 std::optional<ImageContainerID> extract_post_id(std::string_view path) {
-	constexpr std::string_view marker = "/posts/";
-	std::size_t pos = path.find(marker);
-	if (pos == std::string_view::npos) {
-		return std::nullopt;
-	}
-	pos += marker.size();
-	std::size_t end = pos;
-	while (end < path.size() && path[end] >= '0' && path[end] <= '9') {
-		++end;
-	}
-	if (end == pos) {
-		return std::nullopt;
-	}
-	return static_cast<ImageContainerID>(std::atol(std::string(path.substr(pos, end - pos)).c_str()));
+	return extract_id_after(path, "/posts/");
+}
+
+std::optional<ImageContainerID> extract_pool_id(std::string_view path) {
+	return extract_id_after(path, "/pools/");
 }
 
 ImageItemKind derive_kind(std::string_view file_ext) {
@@ -201,6 +211,18 @@ std::optional<ImageItem> post_to_item(const boost::json::object& post) {
 	// cdn.donmai.us serves the file to a bare header-less GET (verified live), so
 	// no Referer is needed — item.image.headers stays empty.
 	return item;
+}
+
+ImageContainerInfo pool_to_container_info(const boost::json::object& pool) {
+	ImageContainerInfo info;
+	info.id = static_cast<ImageContainerID>(json::integer(pool, "id"));
+	// A pool has a name of its own (unlike a post), so no title synthesis needed.
+	info.title = json::str(pool, "name");
+	info.description.text = json::str(pool, "description");
+	// The pool states its size up front; items() pages through that many posts.
+	info.total_items = static_cast<long>(json::integer(pool, "post_count"));
+	info.revision = json::str(pool, "updated_at");
+	return info;
 }
 
 } // namespace aniparse::parsers::danbooru
