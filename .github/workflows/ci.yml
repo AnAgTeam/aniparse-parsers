@@ -1,0 +1,114 @@
+name: ci
+
+# Two guard legs in parallel over the parser layer: MSVC /analyze lifetime gate
+# (compile-time) and AddressSanitizer over the mapping test suite (runtime). The
+# libaniparse core rides as a recursive submodule.
+on:
+  push:
+    branches: [nightly, master, main]
+  pull_request:
+    branches: [nightly, master, main]
+  workflow_dispatch:
+
+jobs:
+  # ---- Compile-time: /analyze lifetime rules promoted to errors (ANIPARSE_PARSERS_ANALYZE).
+  analyze:
+    runs-on: windows-latest
+    env:
+      VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/vcpkg_cache
+    steps:
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Set up MSVC (x64)
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Pin CMake (< 4)
+        uses: jwlawson/actions-setup-cmake@v2
+        with:
+          cmake-version: '3.31.6'
+
+      - name: Export VCPKG_ROOT and prepare binary cache dir
+        shell: pwsh
+        run: |
+          echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" >> $env:GITHUB_ENV
+          New-Item -ItemType Directory -Force -Path "$env:VCPKG_DEFAULT_BINARY_CACHE" | Out-Null
+
+      # Key on this repo's manifest plus the submodule core's manifests.
+      - name: Cache vcpkg binaries
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
+          key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json', 'libaniparse/vcpkg.json', 'libaniparse/libasyncnet/vcpkg.json') }}
+          restore-keys: |
+            vcpkg-${{ runner.os }}-
+
+      - name: Configure (x64-debug + /analyze gate)
+        shell: pwsh
+        run: cmake --preset x64-debug -D ANIPARSE_PARSERS_ANALYZE=ON
+
+      # /analyze is PRIVATE to `aniparse-parsers`; build just that target.
+      - name: Build parsers under /analyze
+        shell: pwsh
+        run: cmake --build out/build/x64-debug --target aniparse-parsers
+
+  # ---- Runtime: AddressSanitizer over the deterministic mapping tests (no network).
+  # ANALYZE forced off so the two legs stay orthogonal — otherwise a stale /analyze
+  # value would short-circuit the build before ASan ever runs.
+  asan:
+    runs-on: windows-latest
+    env:
+      VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/vcpkg_cache
+      ASAN_CXX_FLAGS: "/EHsc /DWIN32 /D_WINDOWS /fsanitize=address /Zi /D_DISABLE_STRING_ANNOTATION /D_DISABLE_VECTOR_ANNOTATION"
+    steps:
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Set up MSVC (x64)
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Pin CMake (< 4)
+        uses: jwlawson/actions-setup-cmake@v2
+        with:
+          cmake-version: '3.31.6'
+
+      - name: Export VCPKG_ROOT and prepare binary cache dir
+        shell: pwsh
+        run: |
+          echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" >> $env:GITHUB_ENV
+          New-Item -ItemType Directory -Force -Path "$env:VCPKG_DEFAULT_BINARY_CACHE" | Out-Null
+
+      - name: Cache vcpkg binaries
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
+          key: vcpkg-asan-${{ runner.os }}-${{ hashFiles('vcpkg.json', 'libaniparse/vcpkg.json', 'libaniparse/libasyncnet/vcpkg.json') }}
+          restore-keys: |
+            vcpkg-asan-${{ runner.os }}-
+
+      - name: Configure (x64-debug + ASan, analyze off)
+        shell: pwsh
+        run: >
+          cmake --preset x64-debug
+          -D "CMAKE_CXX_FLAGS=$env:ASAN_CXX_FLAGS"
+          -D ANIPARSE_PARSERS_ANALYZE=OFF
+
+      - name: Build mapping tests under ASan
+        shell: pwsh
+        run: cmake --build out/build/x64-debug --target aniparse-parsers-tests
+
+      - name: Run tests under ASan
+        shell: pwsh
+        env:
+          ASAN_OPTIONS: abort_on_error=1
+        run: out\build\x64-debug\tests\aniparse-parsers-tests.exe

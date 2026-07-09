@@ -53,10 +53,11 @@ if (ANIPARSE_PARSERS_ANALYZE AND MSVC)
 		/analyze /analyze:external- /analyze:plugin EspXEngine.dll
 		/external:env:INCLUDE /external:W0
 		# Lifetime rules -> errors: a dangling view/pointer/use-after-move fails.
-		/we26815 /we26816 /we26449 /we26800 /we26811 /we26818
+		/we26815 /we26816 /we26449 /we26800 /we26811
 		# Silence the gsl-everywhere style profile (noexcept/const/gsl::at/span/
-		# narrow_cast/bounds) — opinionated, not correctness; keeps the gate signal-only.
-		/wd26440 /wd26446 /wd26447 /wd26455 /wd26439 /wd26432
+		# narrow_cast/bounds/switch) — opinionated, not correctness; keeps the gate
+		# signal-only. 26818 (switch coverage) also fires inside vendored lexbor.
+		/wd26440 /wd26446 /wd26447 /wd26455 /wd26439 /wd26432 /wd26818
 		/wd26472 /wd26481 /wd26482 /wd26821 /wd26496 /wd26497 /wd26475 /wd26459)
 endif()
 
