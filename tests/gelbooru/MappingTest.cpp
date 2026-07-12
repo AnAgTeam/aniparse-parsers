@@ -40,7 +40,8 @@ TEST_CASE("gelbooru post maps tags, uploader, rating and revision", "[gelbooru]"
 	boost::json::value env = load_fixture_json("gelbooru/fixtures/posts_page.json");
 	const boost::json::array* posts = gelbooru::posts_of(env);
 	REQUIRE(posts);
-	aniparse::ImageContainerInfo info = gelbooru::post_to_container_info(posts->at(0).as_object());
+	aniparse::ImageContainerInfo info =
+	    gelbooru::post_to_container_info(posts->at(0).as_object(), "https://gelbooru.com/");
 
 	CHECK(info.id == 8000001);
 	CHECK(info.title == "#8000001"); // synthesized — a booru post has no title
@@ -62,7 +63,7 @@ TEST_CASE("gelbooru media leaf carries the Referer; video derives kind and poste
 	const boost::json::array* posts = gelbooru::posts_of(env);
 	REQUIRE(posts);
 
-	auto still = gelbooru::post_to_item(posts->at(0).as_object());
+	auto still = gelbooru::post_to_item(posts->at(0).as_object(), "https://gelbooru.com/");
 	REQUIRE(still.has_value());
 	CHECK(still->kind == ImageItemKind::Still);
 	CHECK(still->image.url == "https://img4.gelbooru.com/images/ab/cd/abcd0001.png");
@@ -71,7 +72,13 @@ TEST_CASE("gelbooru media leaf carries the Referer; video derives kind and poste
 	CHECK(still->image.size->width == 1200);
 	CHECK_FALSE(still->poster.has_value());
 
-	auto video = gelbooru::post_to_item(posts->at(1).as_object());
+	// The Referer is site data, not baked into the mapping: with no referer, none is
+	// attached (the discriminating check that the hardcoded host is gone).
+	auto still_no_ref = gelbooru::post_to_item(posts->at(0).as_object(), std::nullopt);
+	REQUIRE(still_no_ref.has_value());
+	CHECK(still_no_ref->image.headers.get("Referer").empty());
+
+	auto video = gelbooru::post_to_item(posts->at(1).as_object(), "https://gelbooru.com/");
 	REQUIRE(video.has_value());
 	CHECK(video->kind == ImageItemKind::Video); // .webm
 	// sample_url is empty, so the preview stands in as the poster.

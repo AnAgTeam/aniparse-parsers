@@ -5,12 +5,9 @@
  */
 #include "aniparse/parsers/gelbooru/detail/GelbooruApi.hpp"
 #include "aniparse/json/Json.hpp"
-#include "aniparse/ClientContext.hpp"
 #include "aniparse/utility/UrlPath.hpp"
 
 #include <boost/json.hpp>
-
-#include <array>
 
 namespace aniparse::parsers::gelbooru {
 
@@ -51,29 +48,22 @@ namespace {
 			start = end + 1;
 		}
 	}
+
+	/// The media fetch headers for a post: a Referer when the site descriptor supplies
+	/// one (Gelbooru's img host 302s a bare GET to a hotlink page; the Referer returns
+	/// the real bytes), empty otherwise. The host is site data — not baked in here.
+	Headers referer_headers(std::optional<std::string_view> media_referer) {
+		Headers headers;
+		if (media_referer) {
+			headers.set("Referer", std::string(*media_referer));
+		}
+		return headers;
+	}
 } // namespace
-
-std::span<const std::string_view> api_hosts() {
-	using namespace std::string_view_literals;
-	static constexpr std::array hosts = { "https://gelbooru.com"sv };
-	return hosts;
-}
-
-std::string_view get_api_base(const RequestorContext& context) {
-	return context.base_url(api_hosts());
-}
 
 Headers api_headers() {
 	return Headers{
 	    { "User-Agent", "aniparse-parsers/0.1 (+https://github.com/aniparse)" },
-	};
-}
-
-Headers media_headers() {
-	// Bare GET on img*.gelbooru.com 302s to a hotlink page; the Referer returns the
-	// real bytes (verified live).
-	return Headers{
-	    { "Referer", "https://gelbooru.com/" },
 	};
 }
 
@@ -106,7 +96,8 @@ const boost::json::array* posts_of(const boost::json::value& envelope) {
 	return root ? json::array_field(root, "post") : nullptr;
 }
 
-ImageContainerInfo post_to_container_info(const boost::json::object& post) {
+ImageContainerInfo post_to_container_info(const boost::json::object& post,
+                                          std::optional<std::string_view> media_referer) {
 	ImageContainerInfo info;
 	info.id = static_cast<ImageContainerID>(json::integer(post, "id"));
 	// A booru post has no title; the flat tag string carries no category to build a
@@ -120,7 +111,7 @@ ImageContainerInfo post_to_container_info(const boost::json::object& post) {
 	}
 
 	if (std::string preview = json::str(post, "preview_url"); !preview.empty()) {
-		info.previews.push_back(Image{ .url = std::move(preview), .headers = media_headers() });
+		info.previews.push_back(Image{ .url = std::move(preview), .headers = referer_headers(media_referer) });
 	}
 
 	// "change" is a unix timestamp used only as an opaque equality marker.
@@ -139,7 +130,8 @@ ImageContainerInfo post_to_container_info(const boost::json::object& post) {
 	return info;
 }
 
-std::optional<ImageItem> post_to_item(const boost::json::object& post) {
+std::optional<ImageItem> post_to_item(const boost::json::object& post,
+                                      std::optional<std::string_view> media_referer) {
 	std::string file_url = json::str(post, "file_url");
 	if (file_url.empty()) {
 		return std::nullopt;
@@ -148,8 +140,8 @@ std::optional<ImageItem> post_to_item(const boost::json::object& post) {
 	ImageItem item;
 	item.kind = derive_kind(file_ext_of(file_url));
 	item.image.url = std::move(file_url);
-	// Every media fetch needs the Referer (hotlink protection).
-	item.image.headers = media_headers();
+	// Media fetches carry the site's Referer (hotlink protection), when it has one.
+	item.image.headers = referer_headers(media_referer);
 
 	int width  = static_cast<int>(json::integer(post, "width"));
 	int height = static_cast<int>(json::integer(post, "height"));
@@ -164,7 +156,7 @@ std::optional<ImageItem> post_to_item(const boost::json::object& post) {
 			poster = json::str(post, "preview_url");
 		}
 		if (!poster.empty()) {
-			item.poster = Image{ .url = std::move(poster), .headers = media_headers() };
+			item.poster = Image{ .url = std::move(poster), .headers = referer_headers(media_referer) };
 		}
 	}
 

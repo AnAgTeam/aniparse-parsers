@@ -32,15 +32,18 @@ add_library(aniparse-parsers STATIC
 	"src/parsers/kitsu/KitsuParser.cpp" "include/aniparse/parsers/kitsu/KitsuParser.hpp"
 	"src/parsers/kitsu/KitsuMangaRootGetter.cpp" "include/aniparse/parsers/kitsu/KitsuMangaRootGetter.hpp"
 	"src/parsers/kitsu/KitsuMangaGetter.cpp" "include/aniparse/parsers/kitsu/KitsuMangaGetter.hpp"
+	# booru: the reusable engine toolkit (BooruEngine + generic getters + BooruParser
+	# + BooruSite) now lives in the core lib (libaniparse); here stay only the
+	# concrete per-site engines and their descriptors.
 	"src/parsers/danbooru/detail/DanbooruApi.cpp" "include/aniparse/parsers/danbooru/detail/DanbooruApi.hpp"
+	"src/parsers/danbooru/DanbooruEngine.cpp" "include/aniparse/parsers/danbooru/DanbooruEngine.hpp"
 	"src/parsers/danbooru/DanbooruParser.cpp" "include/aniparse/parsers/danbooru/DanbooruParser.hpp"
 	"src/parsers/danbooru/DanbooruImagesGetter.cpp" "include/aniparse/parsers/danbooru/DanbooruImagesGetter.hpp"
-	"src/parsers/danbooru/DanbooruContainerGetter.cpp" "include/aniparse/parsers/danbooru/DanbooruContainerGetter.hpp"
 	"src/parsers/danbooru/DanbooruPoolGetter.cpp" "include/aniparse/parsers/danbooru/DanbooruPoolGetter.hpp"
 	"src/parsers/gelbooru/detail/GelbooruApi.cpp" "include/aniparse/parsers/gelbooru/detail/GelbooruApi.hpp"
+	"src/parsers/gelbooru/GelbooruEngine.cpp" "include/aniparse/parsers/gelbooru/GelbooruEngine.hpp"
 	"src/parsers/gelbooru/GelbooruParser.cpp" "include/aniparse/parsers/gelbooru/GelbooruParser.hpp"
 	"src/parsers/gelbooru/GelbooruImagesGetter.cpp" "include/aniparse/parsers/gelbooru/GelbooruImagesGetter.hpp"
-	"src/parsers/gelbooru/GelbooruContainerGetter.cpp" "include/aniparse/parsers/gelbooru/GelbooruContainerGetter.hpp"
 )
 
 set_property(TARGET aniparse-parsers PROPERTY CXX_STANDARD 20)

@@ -20,16 +20,6 @@ class RequestorContext;
 
 namespace aniparse::parsers::danbooru {
 
-/// Danbooru's public REST host, declared as the parser's mirror set
-/// (@see DanbooruParser::mirrors) and consumed through RequestorContext::base_url
-/// so a live catalog override can move it without a new binary. A single stable
-/// endpoint today, routed the same way as every other source for uniformity.
-std::span<const std::string_view> api_hosts();
-
-/// The API base URL for this context: a live catalog override for this parser if
-/// present, else the built-in host. Valid while @p context lives. @see api_hosts
-std::string_view get_api_base(const RequestorContext& context);
-
 /// The one header the API expects: a descriptive User-Agent (Danbooru asks
 /// scripts to identify themselves). No auth — the SFW and NSFW read-path are both
 /// anonymous; credentials are a pure rate/limit upgrade the public path omits.
