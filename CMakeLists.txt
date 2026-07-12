@@ -78,8 +78,14 @@ target_include_directories(aniparse-parsers PUBLIC
 	$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
+# In-tree, cmake/Findaniparse.cmake add_subdirectory's libaniparse, giving the
+# plain `aniparse` target — hence BUILD_INTERFACE. An installed consumer instead
+# recreates aniparse via find_dependency (see aniparse-parsers-config.cmake.in),
+# where it is the namespaced imported target — hence INSTALL_INTERFACE. Before,
+# only BUILD_INTERFACE was set, so the exported target carried no dependency.
 target_link_libraries(aniparse-parsers PUBLIC
 	$<BUILD_INTERFACE:aniparse>
+	$<INSTALL_INTERFACE:aniparse::aniparse>
 )
 
 if (ANIPARSE_PARSERS_BUILD_EXAMPLES)
@@ -105,6 +111,12 @@ configure_package_config_file(
 	NO_CHECK_REQUIRED_COMPONENTS_MACRO
 )
 
+write_basic_package_version_file(
+	"${CMAKE_CURRENT_BINARY_DIR}/aniparse-parsers-config-version.cmake"
+	VERSION "${PROJECT_VERSION}"
+	COMPATIBILITY SameMajorVersion
+)
+
 set(target1 aniparse-parsers)
 configure_file("aniparse-parsers.pc.in" "aniparse-parsers.pc" @ONLY)
 
@@ -126,4 +138,12 @@ install(EXPORT aniparse-parsers-targets
 	NAMESPACE aniparse::
 	DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/aniparse-parsers"
 	EXPORT_LINK_INTERFACE_LIBRARIES
+)
+
+# The package config + version file themselves — without this
+# find_package(aniparse-parsers) finds no config and imports nothing.
+install(FILES
+	"${CMAKE_CURRENT_BINARY_DIR}/aniparse-parsers-config.cmake"
+	"${CMAKE_CURRENT_BINARY_DIR}/aniparse-parsers-config-version.cmake"
+	DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/aniparse-parsers"
 )

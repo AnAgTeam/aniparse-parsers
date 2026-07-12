@@ -1,1 +1,10 @@
 @PACKAGE_INIT@
+
+# find_package(aniparse-parsers) must recreate the aniparse dependency the
+# exported target references, then pull in the target definitions themselves.
+# Without this the config only ran @PACKAGE_INIT@ and defined no
+# aniparse::aniparse-parsers target at all.
+include(CMakeFindDependencyMacro)
+find_dependency(aniparse)
+
+include("${CMAKE_CURRENT_LIST_DIR}/aniparse-parsers-targets.cmake")
