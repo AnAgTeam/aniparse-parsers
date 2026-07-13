@@ -166,10 +166,20 @@ MangaInfo media_to_info(const boost::json::object& media) {
 	}
 
 	// genres (array of plain strings) and tags ({name}) both fold into tags.
+	//
+	// A genre carries its name as its ref: AniList filters genre_in BY NAME, so the
+	// name IS the search token — the same value search_support advertises as the
+	// option's key. That is Tag::ref's contract, and it lets a genre off a manga drop
+	// straight back into a search.
+	//
+	// An AniList "tag" is a different axis (tag_in), which this parser does not
+	// advertise as a filter. Its ref stays empty, which is exactly what an empty ref
+	// means: this tag is not searchable here.
 	if (const boost::json::array* genres = json::array_field(media, "genres")) {
 		for (const boost::json::value& genre : *genres) {
 			if (const boost::json::string* name = genre.if_string(); name && !name->empty()) {
-				info.tags.push_back(Tag{ .name = std::string(name->c_str(), name->size()) });
+				std::string label(name->c_str(), name->size());
+				info.tags.push_back(Tag{ .name = label, .ref = std::move(label) });
 			}
 		}
 	}
