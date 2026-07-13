@@ -135,7 +135,18 @@ NetworkRequestTask<SearchCompatibilities> AniListMangaRootGetter::search_support
 	    .url  = std::string(anilist::get_api_base(context)),
 	    .body = anilist::graphql_body(genre_query, {}),
 	};
-	if (auto json_result = co_await context.request_json(request)) {
+	auto json_result = co_await context.request_json(request);
+	if (!json_result) {
+		// Cancellation is not degradation: the caller asked to stop, so stop. Folding
+		// it into "no genres available" would report success, let search() fire its
+		// own request afterwards, and turn a genre query into a bogus InvalidArguments
+		// (the filter would look unsupported).
+		if (json_result.error().code == RequestErrorCode::Cancelled) {
+			co_return unexpected(std::move(json_result.error()));
+		}
+		// Any other failure: serve sorts alone; the caller can still search by text/sort.
+	}
+	else {
 		const boost::json::object* data = anilist::graphql_data(*json_result);
 		if (const boost::json::array* genres = aniparse::json::array_field(data, "GenreCollection")) {
 			ItemSelection selection;
@@ -154,7 +165,6 @@ NetworkRequestTask<SearchCompatibilities> AniListMangaRootGetter::search_support
 			}
 		}
 	}
-	// On failure serve sorts alone; the caller can still search by text/sort.
 
 	co_return SearchCompatibilities{
 	    .supported_filters = std::move(filters),
