@@ -40,7 +40,12 @@ CORO_TEST_CASE("gelbooru search maps the DAPI envelope into container getters", 
 	CHECK(page->results[1].offset == 1);
 	CHECK(page->next_offset == 2);
 
-	auto info0 = co_await page->results[0].item->info(context);
+	// The card the listing mapped, off the constructor — not info(), which goes back to the
+	// source. Against the canned mock that distinction was invisible here: Gelbooru's
+	// single_post() takes posts[0] of whatever it is handed, so a detail request answered
+	// with the LISTING still produced post 0 and this passed. It would have passed just as
+	// happily for results[1], reading post 0's data.
+	auto info0 = page->results[0].item->preview_info();
 	REQUIRE(info0.has_value());
 	CHECK(info0->id == 8000001);
 	CHECK(info0->tags.size() == 6);

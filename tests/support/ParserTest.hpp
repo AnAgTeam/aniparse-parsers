@@ -84,6 +84,61 @@ inline std::shared_ptr<CannedClientMock> make_mock(std::string body, long status
 	    ResponseData{ .status_code = status, .body = std::move(body) });
 }
 
+/**
+ * A client that picks its response by URL, and counts what it was asked for.
+ *
+ * CannedClientMock replays ONE body for everything, which is enough for a getter that
+ * makes a single kind of request — but it cannot tell "the getter went back to the
+ * source" apart from "the getter re-read the listing it already had", because both
+ * produce the same bytes. A getter that answers a detail call by re-parsing the listing
+ * response would pass. This one routes, so the two are distinguishable.
+ */
+struct RoutedClientMock : ClientContext {
+	/// @param routes   matched in order; the first key that appears in the URL wins.
+	/// @param fallback served when no route matches — a 404, so an unrouted request is a
+	///                 test failure rather than a silently wrong body.
+	explicit RoutedClientMock(std::vector<std::pair<std::string, std::string>> routes,
+	                          long status = 200)
+		: routes(std::move(routes)), status(status) {}
+
+	NetworkRequestTask<ResponseData> do_request(ConfiguredGetRequest request) override {
+		co_return answer(request.request.url);
+	}
+	NetworkRequestTask<ResponseData> do_request(ConfiguredPostRequest request) override {
+		co_return answer(request.request.url);
+	}
+	NetworkRequestTask<ResponseData> do_request(ConfiguredPostMultipartRequest request) override {
+		co_return answer(request.request.url);
+	}
+	void set_config(ClientConfig) override {}
+	std::shared_ptr<CookieJar> make_cookie_jar() override { return std::make_shared<DummyCookieJar>(); }
+
+	/// How many requests the getter made. A card served from the constructor costs zero.
+	std::size_t requests = 0;
+	std::vector<std::string> urls;
+
+private:
+	ResponseData answer(const std::string& url) {
+		++requests;
+		urls.push_back(url);
+		for (const auto& [key, body] : routes) {
+			if (url.find(key) != std::string::npos) {
+				return ResponseData{ .status_code = status, .body = body };
+			}
+		}
+		return ResponseData{ .status_code = 404, .body = "{}" };
+	}
+
+	std::vector<std::pair<std::string, std::string>> routes;
+	long status;
+};
+
+inline RequestorContext context_over(std::shared_ptr<RoutedClientMock> mock) {
+	return RequestorContext(std::move(mock),
+	                        std::make_shared<DummyLogger>(),
+	                        std::make_shared<ParserConfig>());
+}
+
 /// A context over @p mock with the inert logger and an empty config. The mock is
 /// kept alive by the returned context; hold the same handle to inspect the request.
 inline RequestorContext context_over(std::shared_ptr<CannedClientMock> mock) {

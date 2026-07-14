@@ -34,11 +34,15 @@ inline coro::task<void> assert_search_shape(aniparse::RequestorContext context, 
 	REQUIRE(page.has_value());
 	CHECK_FALSE(page->results.empty());
 
+	// The card each hit was built with — free and synchronous. Calling info() here would
+	// be wrong twice over: it sends a detail request PER HIT (the whole point of a listing
+	// carrying cards), and against a canned fixture it would ask for a post and be handed
+	// the listing again.
 	for (const auto& entry : page->results) {
-		auto info = co_await entry.item->info(context);
-		REQUIRE(info.has_value());
-		CHECK_FALSE(info->title.empty());
-		CHECK_FALSE(info->tags.empty());
+		auto card = entry.item->preview_info();
+		REQUIRE(card.has_value());
+		CHECK_FALSE(card->title.empty());
+		CHECK_FALSE(card->tags.empty());
 	}
 
 	if (!page->results.empty()) {
