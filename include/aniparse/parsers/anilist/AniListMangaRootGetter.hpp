@@ -14,25 +14,25 @@ namespace aniparse::parsers {
  */
 class AniListMangaRootGetter : public MangaRootGetter {
 public:
-	NetworkRequestTask<SearchCompatibilities> search_support(RequestorContext context) override;
+	NetworkRequestTask<SearchCompatibilities> search_support(RequestorContext context) const override;
 
 	MangaGetterRootCompatibilities latest_support() const noexcept override;
 
 	NetworkRequestTask<PageResults<std::unique_ptr<MangaGetter>>> search(
 	    RequestorContext context,
 	    SearchRequestQuery query,
-	    GetFilters filters) override;
+	    GetFilters filters) const override;
 
 	NetworkRequestTask<PageResults<std::unique_ptr<MangaGetter>>> latest(
 	    RequestorContext context,
-	    GetFilters filters) override;
+	    GetFilters filters) const override;
 
 	NetworkRequestTask<std::unique_ptr<MangaGetter>> parse_url(
 	    RequestorContext context,
-	    ParsedUrl url) override;
+	    ParsedUrl url) const override;
 
 	NetworkRequestTask<std::unique_ptr<MangaGetter>> from_serialized(
-	    SerializedGetterData data) override;
+	    SerializedGetterData data) const override;
 };
 
 } // namespace aniparse::parsers

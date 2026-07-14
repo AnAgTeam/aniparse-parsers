@@ -157,7 +157,7 @@ namespace {
 	}
 } // namespace
 
-NetworkRequestTask<SearchCompatibilities> AniListMangaRootGetter::search_support(RequestorContext context) {
+NetworkRequestTask<SearchCompatibilities> AniListMangaRootGetter::search_support(RequestorContext context) const {
 	// Genres come from the live GenreCollection; sorts are static. (A cache like
 	// the LibSocial parser's LibSocialCatalog would spare the per-call fetch.)
 	SearchItems filters;
@@ -217,7 +217,7 @@ MangaGetterRootCompatibilities AniListMangaRootGetter::latest_support() const no
 }
 
 NetworkRequestTask<PageResults<std::unique_ptr<MangaGetter>>> AniListMangaRootGetter::search(
-    RequestorContext context, SearchRequestQuery query, GetFilters filters) {
+    RequestorContext context, SearchRequestQuery query, GetFilters filters) const {
 	// Reject an unsupported filter/sort up front with a typed error, rather than
 	// letting the API silently drop it. (search_support fetches the genre catalog;
 	// a real deployment would cache it — see search_support's note.)
@@ -284,7 +284,7 @@ NetworkRequestTask<PageResults<std::unique_ptr<MangaGetter>>> AniListMangaRootGe
 }
 
 NetworkRequestTask<PageResults<std::unique_ptr<MangaGetter>>> AniListMangaRootGetter::latest(
-    RequestorContext context, GetFilters filters) {
+    RequestorContext context, GetFilters filters) const {
 	if (auto errors = validate_latest_filters(filters); !errors.empty()) {
 		co_return make_response_error(RequestErrorCode::InvalidArguments,
 		                              describe_search_query_errors(errors));
@@ -310,7 +310,7 @@ NetworkRequestTask<PageResults<std::unique_ptr<MangaGetter>>> AniListMangaRootGe
 }
 
 NetworkRequestTask<std::unique_ptr<MangaGetter>> AniListMangaRootGetter::parse_url(
-    RequestorContext, ParsedUrl url) {
+    RequestorContext, ParsedUrl url) const {
 	// The media id is the numeric segment of the URL path; the getter needs only
 	// that, so no network call is required here.
 	std::optional<int> id = anilist::extract_media_id(url.path());
@@ -322,7 +322,7 @@ NetworkRequestTask<std::unique_ptr<MangaGetter>> AniListMangaRootGetter::parse_u
 }
 
 NetworkRequestTask<std::unique_ptr<MangaGetter>> AniListMangaRootGetter::from_serialized(
-    SerializedGetterData data) {
+    SerializedGetterData data) const {
 	// Inverse of AniListMangaGetter::serialize(): the media id rides in url.
 	int id = 0;
 	auto [end, ec] = std::from_chars(data.url.data(), data.url.data() + data.url.size(), id);

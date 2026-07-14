@@ -85,7 +85,7 @@ namespace {
 	}
 } // namespace
 
-NetworkRequestTask<SearchCompatibilities> KitsuMangaRootGetter::search_support(RequestorContext) {
+NetworkRequestTask<SearchCompatibilities> KitsuMangaRootGetter::search_support(RequestorContext) const {
 	// Sorts are static. Categories are a large taxonomy (thousands of paged
 	// entries); enumerating them as filter options is deferred — a real impl
 	// would page + cache them (cf. the LibSocial parser's LibSocialCatalog).
@@ -99,7 +99,7 @@ MangaGetterRootCompatibilities KitsuMangaRootGetter::latest_support() const noex
 }
 
 NetworkRequestTask<PageResults<std::unique_ptr<MangaGetter>>> KitsuMangaRootGetter::search(
-    RequestorContext context, SearchRequestQuery query, GetFilters filters) {
+    RequestorContext context, SearchRequestQuery query, GetFilters filters) const {
 	// Reject an unsupported filter/sort up front with a typed error, rather than
 	// letting the API silently drop it. Kitsu's search_support is cheap (static
 	// sorts, no network), so this costs nothing extra.
@@ -125,7 +125,7 @@ NetworkRequestTask<PageResults<std::unique_ptr<MangaGetter>>> KitsuMangaRootGett
 }
 
 NetworkRequestTask<PageResults<std::unique_ptr<MangaGetter>>> KitsuMangaRootGetter::latest(
-    RequestorContext context, GetFilters filters) {
+    RequestorContext context, GetFilters filters) const {
 	if (auto errors = validate_latest_filters(filters); !errors.empty()) {
 		co_return make_response_error(RequestErrorCode::InvalidArguments,
 		                              describe_search_query_errors(errors));
@@ -141,7 +141,7 @@ NetworkRequestTask<PageResults<std::unique_ptr<MangaGetter>>> KitsuMangaRootGett
 }
 
 NetworkRequestTask<std::unique_ptr<MangaGetter>> KitsuMangaRootGetter::parse_url(
-    RequestorContext, ParsedUrl url) {
+    RequestorContext, ParsedUrl url) const {
 	// The ref (slug or numeric id) is the last path segment; info() resolves it.
 	std::optional<std::string> ref = kitsu::extract_ref(url.path());
 	if (!ref) {
@@ -152,7 +152,7 @@ NetworkRequestTask<std::unique_ptr<MangaGetter>> KitsuMangaRootGetter::parse_url
 }
 
 NetworkRequestTask<std::unique_ptr<MangaGetter>> KitsuMangaRootGetter::from_serialized(
-    SerializedGetterData data) {
+    SerializedGetterData data) const {
 	// Inverse of KitsuMangaGetter::serialize(): the ref rides in url.
 	if (data.url.empty()) {
 		co_return make_response_error(RequestErrorCode::InvalidArguments,

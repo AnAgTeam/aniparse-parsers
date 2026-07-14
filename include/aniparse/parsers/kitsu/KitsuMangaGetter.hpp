@@ -30,15 +30,15 @@ public:
 
 	[[nodiscard]] std::optional<MangaInfo> preview_info() const noexcept override;
 
-	NetworkRequestTask<MangaInfo> info(RequestorContext context) override;
+	NetworkRequestTask<MangaInfo> info(RequestorContext context) const override;
 
 	NetworkRequestTask<PageResults<MangaPage>> chapter_pages(
 	    RequestorContext context,
 	    MangaChapterRef chapter,
 	    GetFilters filters,
-	    std::optional<MangaTranslationID> translation) override;
+	    std::optional<MangaTranslationID> translation) const override;
 
-	NetworkRequestTask<SerializedGetterData> serialize() override;
+	NetworkRequestTask<SerializedGetterData> serialize() const override;
 
 private:
 	std::string ref_;

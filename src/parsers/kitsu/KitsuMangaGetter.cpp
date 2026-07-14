@@ -28,7 +28,7 @@ std::optional<MangaInfo> KitsuMangaGetter::preview_info() const noexcept {
 	return preview_;
 }
 
-NetworkRequestTask<MangaInfo> KitsuMangaGetter::info(RequestorContext context) {
+NetworkRequestTask<MangaInfo> KitsuMangaGetter::info(RequestorContext context) const {
 	// A numeric ref addresses the resource directly (/manga/{id}); a slug is
 	// resolved through the collection filter (/manga?filter[slug]=). Categories
 	// are sideloaded so tags come back in one round-trip.
@@ -65,13 +65,13 @@ NetworkRequestTask<MangaInfo> KitsuMangaGetter::info(RequestorContext context) {
 }
 
 NetworkRequestTask<PageResults<MangaPage>> KitsuMangaGetter::chapter_pages(
-    RequestorContext, MangaChapterRef, GetFilters, std::optional<MangaTranslationID>) {
+    RequestorContext, MangaChapterRef, GetFilters, std::optional<MangaTranslationID>) const {
 	// Kitsu is a metadata source: it catalogs manga but hosts no chapter images.
 	co_return make_response_error(RequestErrorCode::NotImplemented,
 	                              "Kitsu does not host chapter pages");
 }
 
-NetworkRequestTask<SerializedGetterData> KitsuMangaGetter::serialize() {
+NetworkRequestTask<SerializedGetterData> KitsuMangaGetter::serialize() const {
 	// Identity is the id/slug ref; the preview is a search-time cache, not
 	// identity, so a restored getter fetches info() on preview_info instead.
 	co_return SerializedGetterData{

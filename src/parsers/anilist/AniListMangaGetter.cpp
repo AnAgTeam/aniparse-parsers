@@ -47,7 +47,7 @@ std::optional<MangaInfo> AniListMangaGetter::preview_info() const noexcept {
 	return preview_;
 }
 
-NetworkRequestTask<MangaInfo> AniListMangaGetter::info(RequestorContext context) {
+NetworkRequestTask<MangaInfo> AniListMangaGetter::info(RequestorContext context) const {
 	boost::json::object variables;
 	variables["id"] = media_id_;
 
@@ -73,13 +73,13 @@ NetworkRequestTask<MangaInfo> AniListMangaGetter::info(RequestorContext context)
 }
 
 NetworkRequestTask<PageResults<MangaPage>> AniListMangaGetter::chapter_pages(
-    RequestorContext, MangaChapterRef, GetFilters, std::optional<MangaTranslationID>) {
+    RequestorContext, MangaChapterRef, GetFilters, std::optional<MangaTranslationID>) const {
 	// AniList is a metadata source: it catalogs manga but hosts no chapter images.
 	co_return make_response_error(RequestErrorCode::NotImplemented,
 	                              "AniList does not host chapter pages");
 }
 
-NetworkRequestTask<SerializedGetterData> AniListMangaGetter::serialize() {
+NetworkRequestTask<SerializedGetterData> AniListMangaGetter::serialize() const {
 	// Identity is the numeric media id; the preview is a search-time cache, not
 	// identity, so a restored getter fetches info() on preview_info instead.
 	co_return SerializedGetterData{
