@@ -4,8 +4,8 @@
  * Author: Toilettrauma <macosinternal@gmail.com>
  */
 #pragma once
-#include "aniparse/engines/BooruEngine.hpp"
-#include "aniparse/engines/BooruSite.hpp"
+#include "aniparse/engines/booru/BooruEngine.hpp"
+#include "aniparse/engines/booru/BooruSite.hpp"
 
 namespace aniparse::parsers::danbooru {
 

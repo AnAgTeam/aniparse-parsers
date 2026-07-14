@@ -4,7 +4,7 @@
  * Author: Toilettrauma <macosinternal@gmail.com>
  */
 #pragma once
-#include "aniparse/engines/BooruImagesGetter.hpp"
+#include "aniparse/engines/booru/BooruImagesGetter.hpp"
 
 namespace aniparse::parsers {
 
