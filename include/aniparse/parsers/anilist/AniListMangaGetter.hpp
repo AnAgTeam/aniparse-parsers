@@ -29,6 +29,12 @@ public:
 
 	NetworkRequestTask<MangaInfo> info(RequestorContext context) const override;
 
+	/// The works AniList declares related to this one — including the anime adaptation,
+	/// which this parser cannot open and hands over as ids instead. @see RelatedWork
+	NetworkRequestTask<PageResults<RelatedWork>> related(
+	    RequestorContext context,
+	    GetFilters filters) const override;
+
 	NetworkRequestTask<PageResults<MangaPage>> chapter_pages(
 	    RequestorContext context,
 	    MangaChapterRef chapter,
