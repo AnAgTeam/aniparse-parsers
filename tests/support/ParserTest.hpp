@@ -7,7 +7,7 @@
 #include "catch_amalgamated.hpp"
 
 #include "aniparse/ClientContext.hpp"
-#include "aniparse/CookieJar.hpp"
+#include "aniparse/net/CookieJar.hpp"
 #include "aniparse/Parser.hpp"
 
 #include <boost/json.hpp>

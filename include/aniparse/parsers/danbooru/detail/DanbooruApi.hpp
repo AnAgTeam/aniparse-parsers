@@ -4,7 +4,7 @@
  * Author: Toilettrauma <macosinternal@gmail.com>
  */
 #pragma once
-#include "aniparse/Headers.hpp"
+#include "aniparse/types/Headers.hpp"
 #include "aniparse/images/Image.hpp"
 
 #include <boost/json.hpp>
