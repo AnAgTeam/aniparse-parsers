@@ -18,6 +18,7 @@ namespace {
 	constexpr std::string_view media_query = R"(query ($id: Int) {
   Media(id: $id, type: MANGA) {
     id
+    idMal
     title { romaji english native }
     description(asHtml: false)
     coverImage { extraLarge large }

@@ -200,6 +200,51 @@ static coro::task<void> showcase(ParserStore& store, RequestorContext base,
 	std::println("");
 }
 
+// Identity lookup: the cross-source anchor in action. A consumer that holds only a
+// foreign id — a MyAnimeList manga id, as another source would have emitted it in
+// MangaInfo::external_ids — resolves it to this source's item, then reads back the
+// ids that item carries. That round trip is what lets one work be recognised across
+// parsers instead of being a fresh, unrelated entry in every source.
+//
+// Deliberately discriminating: were the filter silently dropped, the query would
+// degenerate into the default popularity page — an obviously different title, not a
+// plausible near-miss.
+static coro::task<void> showcase_identity(ParserStore& store, RequestorContext base,
+                                          std::string mal_id) {
+	auto parser = store.find_by_key("AniList");
+	if (!parser) {
+		std::println("[AniList] not registered");
+		co_return;
+	}
+	RequestorContext context = base.new_with_config(parser->make_config(base.config()));
+	auto root = parser->mangas_getter();
+
+	std::println("== AniList : lookup by MyAnimeList manga id {} ==", mal_id);
+	SearchRequestQuery query;
+	query.filters.emplace(
+	    std::string(search_keys::mal_id),
+	    ItemSelection{ { mal_id, ItemSelectionValue{ .name = mal_id, .exclusive = false } } });
+
+	auto found = co_await root->search(context, query, GetFilters{ .from = 0, .limit = 3 });
+	if (!found) {
+		std::println("  lookup failed: {}\n", error_line(found.error()));
+		co_return;
+	}
+	std::println("  matches: {}", found->results.size());
+	for (const auto& entry : found->results) {
+		auto info = co_await entry.item->info(context);
+		if (!info) {
+			continue;
+		}
+		std::println("   - {}", info->title);
+		for (const ExternalId& id : info->external_ids) {
+			std::println("     carries {} {} = {}",
+			             id.kind == MediaKind::Manga ? "manga" : "anime", id.ns, id.id);
+		}
+	}
+	std::println("");
+}
+
 // Route a URL to its parser and fetch info, no source key needed up front.
 static coro::task<void> route_and_show(ParserStore& store, RequestorContext base, std::string url) {
 	std::println("== route '{}' ==", url);
@@ -238,6 +283,10 @@ coro::task<void> demo() {
 
 	// Gelbooru: autocomplete always; live search when GELBOORU_USER_ID + _API_KEY are set.
 	co_await showcase_gelbooru(store, context);
+
+	// Frieren's MyAnimeList *manga* id — its anime is a different entry with an
+	// unrelated id, which is why an ExternalId names the catalogue it addresses.
+	co_await showcase_identity(store, context, "126287");
 
 	co_await route_and_show(store, context, "https://anilist.co/manga/30013/One-Piece");
 	co_await route_and_show(store, context, "https://kitsu.io/manga/one-piece");

@@ -26,12 +26,16 @@ namespace {
 	/// search (reads them back), so the two sides never drift.
 	constexpr std::string_view filter_key_genres = "genres";
 
-	/// The Page(media) list query: search + sort + genre filter, short media cards.
-	constexpr std::string_view search_query = R"(query ($search: String, $page: Int, $perPage: Int, $sort: [MediaSort], $genres: [String]) {
+	/// The Page(media) list query: search + sort + genre filter + lookup by AniList
+	/// or MyAnimeList id, short media cards. Both id arguments take a list, so a
+	/// whole batch of ids resolves in one request — what a consumer restoring a
+	/// stored library needs.
+	constexpr std::string_view search_query = R"(query ($search: String, $page: Int, $perPage: Int, $sort: [MediaSort], $genres: [String], $ids: [Int], $malIds: [Int]) {
   Page(page: $page, perPage: $perPage) {
     pageInfo { total }
-    media(type: MANGA, search: $search, sort: $sort, genre_in: $genres) {
+    media(type: MANGA, search: $search, sort: $sort, genre_in: $genres, id_in: $ids, idMal_in: $malIds) {
       id
+      idMal
       title { romaji english native }
       coverImage { large }
     }
@@ -90,6 +94,33 @@ namespace {
 		return genres;
 	}
 
+	/// The ids a query looks the manga up by under an identity key, as the [Int]
+	/// list AniList's id_in / idMal_in take. Each token IS the id, so an ExternalId
+	/// collected off another source drops straight into the query. Empty when the
+	/// caller does not use the key; nullopt when a token is not an id at all — that
+	/// is a caller bug, and reporting it beats quietly searching for something else.
+	std::optional<boost::json::array> selected_ids(const SearchItems& filters, std::string_view key) {
+		boost::json::array ids;
+		auto entry = filters.find(key);
+		if (entry == filters.end()) {
+			return ids;
+		}
+		const ItemSelection* selection = std::get_if<ItemSelection>(&entry->second);
+		if (!selection) {
+			return ids;
+		}
+		for (const auto& [token, item] : *selection) {
+			int id          = 0;
+			const char* end = token.data() + token.size();
+			auto [stop, ec] = std::from_chars(token.data(), end, id);
+			if (ec != std::errc{} || stop != end || id <= 0) {
+				return std::nullopt;
+			}
+			ids.emplace_back(id);
+		}
+		return ids;
+	}
+
 	/// Parse a {"Page":{"media":[...],"pageInfo":{...}}} payload into a page of
 	/// manga getters, each carrying its short-card preview so preview_info needs
 	/// no extra fetch.
@@ -130,6 +161,14 @@ NetworkRequestTask<SearchCompatibilities> AniListMangaRootGetter::search_support
 	// Genres come from the live GenreCollection; sorts are static. (A cache like
 	// the LibSocial parser's LibSocialCatalog would spare the per-call fetch.)
 	SearchItems filters;
+
+	// Identity lookups, declared without a fetch: ids are not an enumerable option
+	// set, so both axes carry an open vocabulary (any token is a candidate id).
+	// anilist_id is the mandatory own-vocabulary lookup — a consumer holding an
+	// AniList id and no getter has no other way in. mal_id is the bonus: AniList is
+	// one of the few sources that cross-reference a foreign catalogue.
+	filters.emplace(std::string(search_keys::anilist_id), ItemSelection{});
+	filters.emplace(std::string(search_keys::mal_id), ItemSelection{});
 
 	PostRequest request = {
 	    .url  = std::string(anilist::get_api_base(context)),
@@ -207,6 +246,27 @@ NetworkRequestTask<PageResults<std::unique_ptr<MangaGetter>>> AniListMangaRootGe
 	variables["sort"] = boost::json::array{ boost::json::string(sort) };
 	if (boost::json::array genres = selected_genres(query.filters); !genres.empty()) {
 		variables["genres"] = std::move(genres);
+	}
+
+	// Identity lookups. validate_query passed them as an open vocabulary, so the
+	// tokens are checked here — a token that is not an id is rejected outright,
+	// never dropped (a silently ignored lookup returns a plausible wrong page).
+	std::optional<boost::json::array> ids = selected_ids(query.filters, search_keys::anilist_id);
+	if (!ids) {
+		co_return make_response_error(RequestErrorCode::InvalidArguments,
+		                              "anilist_id accepts numeric ids only");
+	}
+	if (!ids->empty()) {
+		variables["ids"] = std::move(*ids);
+	}
+
+	std::optional<boost::json::array> mal_ids = selected_ids(query.filters, search_keys::mal_id);
+	if (!mal_ids) {
+		co_return make_response_error(RequestErrorCode::InvalidArguments,
+		                              "mal_id accepts numeric ids only");
+	}
+	if (!mal_ids->empty()) {
+		variables["malIds"] = std::move(*mal_ids);
 	}
 
 	PostRequest request = {

@@ -44,6 +44,30 @@ namespace {
 		return AiredStatus{};
 	}
 
+	/// The cross-source anchors AniList knows: its own media id, and the
+	/// MyAnimeList id it cross-references. Both are manga-catalogue ids — the
+	/// work's anime is a different entry with unrelated ids, reachable through
+	/// the Media relations, not by reusing these. idMal is absent for entries
+	/// MyAnimeList does not carry, and then only the AniList id is emitted.
+	void set_external_ids(MangaInfo& info, const boost::json::object& media) {
+		namespace json = aniparse::json;
+
+		if (long id = static_cast<long>(json::integer(media, "id")); id > 0) {
+			info.external_ids.push_back(ExternalId{
+			    .ns   = std::string(id_namespaces::anilist),
+			    .kind = MediaKind::Manga,
+			    .id   = std::to_string(id),
+			});
+		}
+		if (long mal = static_cast<long>(json::integer(media, "idMal")); mal > 0) {
+			info.external_ids.push_back(ExternalId{
+			    .ns   = std::string(id_namespaces::mal),
+			    .kind = MediaKind::Manga,
+			    .id   = std::to_string(mal),
+			});
+		}
+	}
+
 	/// native title as original_title when it is present and differs from the
 	/// chosen display title (so we don't echo the same string twice).
 	void set_original_title(MangaInfo& info, const boost::json::object& media) {
@@ -130,6 +154,7 @@ MangaInfo media_to_preview(const boost::json::object& media) {
 	info.id    = static_cast<MangaID>(aniparse::json::integer(media, "id"));
 	info.title = display_title(media);
 	set_original_title(info, media);
+	set_external_ids(info, media);
 	if (const boost::json::object* cover = aniparse::json::object_field(media, "coverImage")) {
 		std::string url = aniparse::json::str(*cover, "large");
 		if (url.empty()) {
@@ -149,6 +174,7 @@ MangaInfo media_to_info(const boost::json::object& media) {
 	info.id    = static_cast<MangaID>(json::integer(media, "id"));
 	info.title = display_title(media);
 	set_original_title(info, media);
+	set_external_ids(info, media);
 
 	if (std::string description = json::str(media, "description"); !description.empty()) {
 		info.description = AttributedText{ .text = strip_html_breaks(std::move(description)) };
