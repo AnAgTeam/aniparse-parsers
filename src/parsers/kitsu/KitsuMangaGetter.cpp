@@ -30,14 +30,15 @@ std::optional<MangaInfo> KitsuMangaGetter::preview_info() const noexcept {
 
 NetworkRequestTask<MangaInfo> KitsuMangaGetter::info(RequestorContext context) const {
 	// A numeric ref addresses the resource directly (/manga/{id}); a slug is
-	// resolved through the collection filter (/manga?filter[slug]=). Categories
-	// are sideloaded so tags come back in one round-trip.
+	// resolved through the collection filter (/manga?filter[slug]=). Categories and
+	// mappings are sideloaded, so tags and this item's ids on other sites come back
+	// in the same round-trip. @see ExternalId
 	const bool numeric = all_digits(ref_);
 	GetRequest request = {
 	    .url = numeric ? format("{}/manga/{}", kitsu::get_api_base(context), ref_)
 	                   : format("{}/manga", kitsu::get_api_base(context)),
 	};
-	request.url_params.add("include", "categories");
+	request.url_params.add("include", "categories,mappings");
 	if (!numeric) {
 		request.url_params.add("filter[slug]", ref_);
 	}

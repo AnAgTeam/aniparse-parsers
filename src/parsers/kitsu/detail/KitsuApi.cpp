@@ -57,6 +57,31 @@ namespace {
 		return static_cast<MangaID>(std::atol(id.c_str()));
 	}
 
+	/// One sideloaded "mappings" resource -> an ExternalId, or nullopt when it names
+	/// a vocabulary the core does not, or Kitsu's own id (which is this getter's
+	/// identity, not an id on another site).
+	///
+	/// Kitsu spells the site as "<site>/<kind>" ("myanimelist/manga") or bare
+	/// ("mangaupdates"); only the site half selects the namespace, and the kind is
+	/// this parser's domain regardless.
+	std::optional<ExternalId> mapping_to_external_id(const boost::json::object& attributes) {
+		const std::string site = aniparse::json::str(attributes, "externalSite");
+		const std::string id   = aniparse::json::str(attributes, "externalId");
+		if (site.empty() || id.empty()) {
+			return std::nullopt;
+		}
+		const std::string_view vocabulary = std::string_view(site).substr(0, site.find('/'));
+
+		std::string_view ns;
+		if (vocabulary == "myanimelist")       ns = id_namespaces::mal;
+		else if (vocabulary == "anilist")      ns = id_namespaces::anilist;
+		else if (vocabulary == "anidb")        ns = id_namespaces::anidb;
+		else if (vocabulary == "mangaupdates") ns = id_namespaces::mangaupdates;
+		else return std::nullopt;
+
+		return ExternalId{ .ns = std::string(ns), .kind = MediaKind::Manga, .id = id };
+	}
+
 	/// posterImage.original (else large) -> a single preview image.
 	void set_poster(MangaInfo& info, const boost::json::object& attributes) {
 		const boost::json::object* poster = aniparse::json::object_field(attributes, "posterImage");
@@ -161,17 +186,26 @@ MangaInfo media_to_info(const boost::json::object& resource, const boost::json::
 	// Kitsu's coarsest maturity flag: the R18 age rating marks adult content.
 	info.is_hentai = json::str(*attributes, "ageRating") == "R18";
 
-	// Categories are sideloaded into the envelope's "included" array; for a
-	// single-resource fetch those are exactly this manga's categories.
+	// Categories and mappings are sideloaded into the envelope's "included" array;
+	// for a single-resource fetch those are exactly this manga's.
 	if (included) {
 		for (const boost::json::value& entry : *included) {
 			const boost::json::object* resource_entry = entry.if_object();
-			if (!resource_entry || json::str(*resource_entry, "type") != "categories") {
+			if (!resource_entry) {
 				continue;
 			}
-			if (const boost::json::object* category_attrs = json::object_field(*resource_entry, "attributes")) {
-				if (std::string title = json::str(*category_attrs, "title"); !title.empty()) {
+			const std::string type = json::str(*resource_entry, "type");
+			const boost::json::object* entry_attrs = json::object_field(*resource_entry, "attributes");
+			if (!entry_attrs) {
+				continue;
+			}
+			if (type == "categories") {
+				if (std::string title = json::str(*entry_attrs, "title"); !title.empty()) {
 					info.tags.push_back(Tag{ .name = std::move(title) });
+				}
+			} else if (type == "mappings") {
+				if (std::optional<ExternalId> external = mapping_to_external_id(*entry_attrs)) {
+					info.external_ids.push_back(*std::move(external));
 				}
 			}
 		}
