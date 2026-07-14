@@ -49,7 +49,7 @@ of URLs against the real APIs.
 ## Use
 
 ```cpp
-#include <aniparse/Client.hpp>
+#include <aniparse/net/Client.hpp>
 #include <aniparse/ParserStore.hpp>
 #include <aniparse/parsers/DefaultParsers.hpp>
 

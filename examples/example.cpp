@@ -13,7 +13,7 @@
 
 #include <aniparse/AniParse.hpp>
 #include <aniparse/ParserStore.hpp>
-#include <aniparse/Client.hpp>
+#include <aniparse/net/Client.hpp>
 #include <aniparse/parsers/DefaultParsers.hpp>
 #include <aniparse/types/Authentication.hpp>
 #include <aniparse/utility/Format.hpp>
