@@ -44,21 +44,18 @@ namespace {
 		return AiredStatus{};
 	}
 
-	/// The cross-source anchors AniList knows: its own media id, and the
-	/// MyAnimeList id it cross-references. Both are manga-catalogue ids — the
-	/// work's anime is a different entry with unrelated ids, reachable through
-	/// the Media relations, not by reusing these. idMal is absent for entries
-	/// MyAnimeList does not carry, and then only the AniList id is emitted.
+	/// The cross-source anchor AniList knows: the MyAnimeList id it cross-references.
+	/// A manga-catalogue id — the work's anime is a different entry with unrelated
+	/// ids, reachable through the Media relations, not by reusing this one. Absent
+	/// for entries MyAnimeList does not carry, and then nothing is emitted.
+	///
+	/// AniList's own id is deliberately NOT emitted: an ExternalId says where else
+	/// this item lives, and "this AniList item is also on AniList" says nothing. The
+	/// id is already MangaInfo::id, and a consumer that needs to reopen the item holds
+	/// the getter's serialize() handle, which is the identity that survives a restart.
 	void set_external_ids(MangaInfo& info, const boost::json::object& media) {
 		namespace json = aniparse::json;
 
-		if (long id = static_cast<long>(json::integer(media, "id")); id > 0) {
-			info.external_ids.push_back(ExternalId{
-			    .ns   = std::string(id_namespaces::anilist),
-			    .kind = MediaKind::Manga,
-			    .id   = std::to_string(id),
-			});
-		}
 		if (long mal = static_cast<long>(json::integer(media, "idMal")); mal > 0) {
 			info.external_ids.push_back(ExternalId{
 			    .ns   = std::string(id_namespaces::mal),
