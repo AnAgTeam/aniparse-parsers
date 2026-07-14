@@ -40,13 +40,11 @@ MangaGetterCompatibilities AniListMangaGetter::compatibilities() const noexcept 
 	return {};
 }
 
-NetworkRequestTask<MangaInfo> AniListMangaGetter::preview_info(RequestorContext context) {
-	// Short-card info captured at search time; only fall back to the full detail
-	// fetch when the getter was built straight from a URL.
-	if (preview_) {
-		co_return *preview_;
-	}
-	co_return co_await info(context);
+// The card the listing handed this getter; nullopt when it was built from a URL
+// or a serialized id. No fallback to info(): the caller decides whether the full
+// record is worth a request. @see MangaGetter::preview_info
+std::optional<MangaInfo> AniListMangaGetter::preview_info() const noexcept {
+	return preview_;
 }
 
 NetworkRequestTask<MangaInfo> AniListMangaGetter::info(RequestorContext context) {

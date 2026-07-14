@@ -28,7 +28,7 @@ public:
 
 	MangaGetterCompatibilities compatibilities() const noexcept override;
 
-	NetworkRequestTask<MangaInfo> preview_info(RequestorContext context) override;
+	[[nodiscard]] std::optional<MangaInfo> preview_info() const noexcept override;
 
 	NetworkRequestTask<MangaInfo> info(RequestorContext context) override;
 

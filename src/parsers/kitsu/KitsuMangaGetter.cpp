@@ -21,11 +21,11 @@ MangaGetterCompatibilities KitsuMangaGetter::compatibilities() const noexcept {
 	return {};
 }
 
-NetworkRequestTask<MangaInfo> KitsuMangaGetter::preview_info(RequestorContext context) {
-	if (preview_) {
-		co_return *preview_;
-	}
-	co_return co_await info(context);
+// The card the listing handed this getter; nullopt when it was built from a URL
+// or a serialized id. No fallback to info(): the caller decides whether the full
+// record is worth a request. @see MangaGetter::preview_info
+std::optional<MangaInfo> KitsuMangaGetter::preview_info() const noexcept {
+	return preview_;
 }
 
 NetworkRequestTask<MangaInfo> KitsuMangaGetter::info(RequestorContext context) {
