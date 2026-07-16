@@ -23,7 +23,7 @@ namespace {
     id
     idMal
     title { romaji english native }
-    description(asHtml: false)
+    description(asHtml: true)
     coverImage { extraLarge large }
     averageScore
     genres

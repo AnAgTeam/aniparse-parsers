@@ -6,6 +6,7 @@
 #include "aniparse/parsers/anilist/detail/AniListApi.hpp"
 #include "aniparse/json/Json.hpp"
 #include "aniparse/ClientContext.hpp"
+#include "aniparse/utility/HtmlText.hpp"
 #include "aniparse/utility/UrlPath.hpp"
 
 #include <boost/json.hpp>
@@ -15,19 +16,6 @@
 namespace aniparse::parsers::anilist {
 
 namespace {
-	/// AniList descriptions embed literal <br> line breaks (even with
-	/// asHtml:false); normalize them to '\n' so the plain text reads cleanly.
-	std::string strip_html_breaks(std::string text) {
-		for (std::string_view tag : { "<br>", "<br/>", "<br />" }) {
-			std::size_t pos = 0;
-			while ((pos = text.find(tag, pos)) != std::string::npos) {
-				text.replace(pos, tag.size(), "\n");
-				pos += 1;
-			}
-		}
-		return text;
-	}
-
 	/// Map an AniList MediaStatus to the model's canonical aired-status name.
 	/// RELEASING/HIATUS read as ongoing; NOT_YET_RELEASED as announced; FINISHED
 	/// as released; CANCELLED (and anything unknown) falls through to Other.
@@ -173,8 +161,8 @@ MangaInfo media_to_info(const boost::json::object& media) {
 	set_original_title(info, media);
 	set_external_ids(info, media);
 
-	if (std::string description = json::str(media, "description"); !description.empty()) {
-		info.description = AttributedText{ .text = strip_html_breaks(std::move(description)) };
+	if (const std::string description = json::str(media, "description"); !description.empty()) {
+		info.description = text::from_html(description);
 	}
 
 	// coverImage.extraLarge, falling back to large.
