@@ -91,7 +91,7 @@ namespace {
 				}
 			}
 
-			GetRequest request = { .url = format("{}/index.php", base) };
+			GetRequest request = { .url = fmt::format("{}/index.php", base) };
 			add_post_index_params(request);
 			if (!tags.empty()) {
 				request.url_params.add("tags", std::move(tags));
@@ -106,7 +106,7 @@ namespace {
 		}
 
 		GetRequest container_request(std::string_view base, ImageContainerID id) const override {
-			GetRequest request = { .url = format("{}/index.php", base) };
+			GetRequest request = { .url = fmt::format("{}/index.php", base) };
 			add_post_index_params(request);
 			request.url_params.add("id", std::to_string(id));
 			return request;
@@ -135,7 +135,7 @@ namespace {
 		GetRequest suggest_request(std::string_view base, std::string partial,
 		                           std::optional<std::string> /*kind*/) const override {
 			// autocomplete2 is the one credential-free surface; a single tag_query type.
-			GetRequest request = { .url = format("{}/index.php", base) };
+			GetRequest request = { .url = fmt::format("{}/index.php", base) };
 			request.url_params.add("page", "autocomplete2");
 			request.url_params.add("term", std::move(partial));
 			request.url_params.add("type", "tag_query");

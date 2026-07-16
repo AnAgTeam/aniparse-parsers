@@ -30,10 +30,10 @@
 using namespace aniparse;
 
 static std::string error_line(const RequestError& error) {
-	return format("[{}] {}{}",
+	return fmt::format("[{}] {}{}",
 	              static_cast<int>(error.code),
 	              error.message,
-	              error.http_status ? format(" (http {})", *error.http_status) : std::string{});
+	              error.http_status ? fmt::format(" (http {})", *error.http_status) : std::string{});
 }
 
 static void print_info(const MangaInfo& info) {
@@ -87,7 +87,7 @@ static coro::task<void> showcase_images(ParserStore& store, RequestorContext bas
 			for (const auto& page_item : items->results) {
 				const ImageItem& media = page_item.item;
 				std::string size = media.image.size
-				    ? format("{}x{}", media.image.size->width, media.image.size->height)
+				    ? fmt::format("{}x{}", media.image.size->width, media.image.size->height)
 				    : "?";
 				std::println("   [{}] {} ({})", kind_name(media.kind), media.image.url, size);
 			}

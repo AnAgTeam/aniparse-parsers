@@ -88,7 +88,7 @@ namespace {
 				}
 			}
 
-			GetRequest request = { .url = format("{}/posts.json", base) };
+			GetRequest request = { .url = fmt::format("{}/posts.json", base) };
 			if (!tags.empty()) {
 				request.url_params.add("tags", std::move(tags));
 			}
@@ -103,7 +103,7 @@ namespace {
 		}
 
 		GetRequest container_request(std::string_view base, ImageContainerID id) const override {
-			return GetRequest{ .url = format("{}/posts/{}.json", base, id) };
+			return GetRequest{ .url = fmt::format("{}/posts/{}.json", base, id) };
 		}
 
 		const boost::json::object* single_post(const boost::json::value& envelope) const override {
@@ -130,7 +130,7 @@ namespace {
 			// artist; anything else queries all tags and comes back typed per item.
 			std::string type = (kind && *kind == search_keys::artist) ? "artist" : "tag_query";
 
-			GetRequest request = { .url = format("{}/autocomplete.json", base) };
+			GetRequest request = { .url = fmt::format("{}/autocomplete.json", base) };
 			request.url_params.add("search[query]", std::move(partial));
 			request.url_params.add("search[type]", std::move(type));
 			request.url_params.add("limit", "10");
@@ -176,7 +176,7 @@ namespace {
 		}
 
 		GetRequest pool_request(std::string_view base, ImageContainerID id) const override {
-			return GetRequest{ .url = format("{}/pools/{}.json", base, id) };
+			return GetRequest{ .url = fmt::format("{}/pools/{}.json", base, id) };
 		}
 
 		ImageContainerInfo pool_to_container_info(const boost::json::object& pool) const override {
@@ -192,8 +192,8 @@ namespace {
 			const pageoff page = limit > 0 ? filters.from / limit + 1 : 1;
 
 			// `ordpool:{id}` returns the pool's posts in pool order, paged like any listing.
-			GetRequest request = { .url = format("{}/posts.json", base) };
-			request.url_params.add("tags", format("ordpool:{}", id));
+			GetRequest request = { .url = fmt::format("{}/posts.json", base) };
+			request.url_params.add("tags", fmt::format("ordpool:{}", id));
 			request.url_params.add("page",  std::to_string(page));
 			request.url_params.add("limit", std::to_string(limit));
 			return request;

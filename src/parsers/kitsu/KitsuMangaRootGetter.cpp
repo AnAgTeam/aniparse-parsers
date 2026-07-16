@@ -134,7 +134,7 @@ namespace {
 	/// A /manga collection request with offset paging + sort applied.
 	GetRequest list_request(const RequestorContext& context, const GetFilters& filters,
 	                        std::string_view default_sort) {
-		GetRequest request = { .url = format("{}/manga", kitsu::get_api_base(context)) };
+		GetRequest request = { .url = fmt::format("{}/manga", kitsu::get_api_base(context)) };
 		const pageoff limit = clamp_limit(filters, max_page_limit, max_page_limit);
 		request.url_params.add("page[limit]",  std::to_string(limit));
 		request.url_params.add("page[offset]", std::to_string(filters.from));
@@ -195,7 +195,7 @@ NetworkRequestTask<PageResults<std::unique_ptr<MangaGetter>>> KitsuMangaRootGett
 		std::optional<std::string> ids = selected_ids(query.filters, key);
 		if (!ids) {
 			co_return make_response_error(RequestErrorCode::InvalidArguments,
-			                              format("{} accepts numeric ids only", key));
+			                              fmt::format("{} accepts numeric ids only", key));
 		}
 		if (ids->empty()) {
 			continue;
@@ -203,7 +203,7 @@ NetworkRequestTask<PageResults<std::unique_ptr<MangaGetter>>> KitsuMangaRootGett
 
 		const std::string_view site = external_site(key);
 		if (site.empty()) { // kitsu_id — our own vocabulary
-			GetRequest own = { .url = format("{}/manga", kitsu::get_api_base(context)) };
+			GetRequest own = { .url = fmt::format("{}/manga", kitsu::get_api_base(context)) };
 			own.url_params.add("filter[id]", *ids);
 			own.url_params.add("page[limit]", std::to_string(clamp_limit(filters, max_page_limit, max_page_limit)));
 			auto looked_up = co_await context.request_json(own);
@@ -213,7 +213,7 @@ NetworkRequestTask<PageResults<std::unique_ptr<MangaGetter>>> KitsuMangaRootGett
 			co_return build_manga_page(*looked_up, filters);
 		}
 
-		GetRequest mapped = { .url = format("{}/mappings", kitsu::get_api_base(context)) };
+		GetRequest mapped = { .url = fmt::format("{}/mappings", kitsu::get_api_base(context)) };
 		mapped.url_params.add("filter[externalSite]", std::string(site));
 		mapped.url_params.add("filter[externalId]", *ids);
 		mapped.url_params.add("include", "item");

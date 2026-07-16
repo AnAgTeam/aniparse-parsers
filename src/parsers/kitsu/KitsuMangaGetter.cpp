@@ -35,8 +35,8 @@ NetworkRequestTask<MangaInfo> KitsuMangaGetter::info(RequestorContext context) c
 	// in the same round-trip. @see ExternalId
 	const bool numeric = all_digits(ref_);
 	GetRequest request = {
-	    .url = numeric ? format("{}/manga/{}", kitsu::get_api_base(context), ref_)
-	                   : format("{}/manga", kitsu::get_api_base(context)),
+	    .url = numeric ? fmt::format("{}/manga/{}", kitsu::get_api_base(context), ref_)
+	                   : fmt::format("{}/manga", kitsu::get_api_base(context)),
 	};
 	request.url_params.add("include", "categories,mappings");
 	if (!numeric) {
