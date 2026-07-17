@@ -6,3 +6,4 @@
 /CoverageReport/
 *.log
 /cache/
+.DS_Store
