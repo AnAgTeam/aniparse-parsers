@@ -5,8 +5,15 @@
 		"boost-json",
 		"boost-regex",
 		"boost-system",
-		"curl",
 		"fmt",
 		"tl-expected"
-	]
+	],
+	"features": {
+		"curl-backend": {
+			"description": "The curl HTTP backend. Off for platforms with a native backend (Apple/NSURLSession); CMake selects this feature from the ANIPARSE_CURL_BACKEND option, so curl is not installed at all when the backend is off.",
+			"dependencies": [
+				"curl"
+			]
+		}
+	}
 }
