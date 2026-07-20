@@ -120,10 +120,18 @@ ImageContainerInfo post_to_container_info(const boost::json::object& post) {
 	append_tags(info.tags, post, "tag_string_general");
 	append_tags(info.tags, post, "tag_string_meta");
 
+	// Copyright is a space-separated list; a post can derive from several franchises,
+	// so surface every one (primary — the same token the title uses — lands first).
 	if (std::string copyright = json::str(post, "tag_string_copyright"); !copyright.empty()) {
-		std::size_t space = copyright.find(' ');
-		std::string first = space == std::string::npos ? copyright : copyright.substr(0, space);
-		info.series = Series{ .name = first, .ref = first };
+		for (std::size_t start = 0; start < copyright.size();) {
+			const std::size_t space = copyright.find(' ', start);
+			const std::size_t end = space == std::string::npos ? copyright.size() : space;
+			if (end > start) {
+				std::string name = copyright.substr(start, end - start);
+				info.series.push_back(Series{ .name = name, .ref = name });
+			}
+			start = end + 1;
+		}
 	}
 
 	if (std::string preview = json::str(post, "preview_file_url"); !preview.empty()) {

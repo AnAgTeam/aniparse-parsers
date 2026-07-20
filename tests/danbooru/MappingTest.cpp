@@ -54,8 +54,8 @@ TEST_CASE("still post synthesizes title and maps container metadata", "[danbooru
 
 	CHECK(info.id == 5000001);
 	CHECK(info.title == "cirno (touhou_project)");
-	REQUIRE(info.series.has_value());
-	CHECK(info.series->name == "touhou_project");
+	REQUIRE(info.series.size() == 1);
+	CHECK(info.series.front().name == "touhou_project");
 	CHECK(info.revision == "2026-01-02T03:04:05.678-05:00");
 	REQUIRE(info.total_items.has_value());
 	CHECK(*info.total_items == 1);
