@@ -152,7 +152,7 @@ namespace {
 NetworkRequestTask<SearchCompatibilities> KitsuMangaRootGetter::search_support(RequestorContext) const {
 	// Sorts are static. Categories are a large taxonomy (thousands of paged
 	// entries); enumerating them as filter options is deferred — a real impl
-	// would page + cache them (cf. the LibSocial parser's LibSocialCatalog).
+	// would page + cache them (a source with an enumerable catalog would cache it).
 	SearchItems filters;
 	// kitsu_id is the mandatory own-vocabulary lookup: Kitsu ids are what this source
 	// hands out in other sources' ExternalIds, and a consumer holding one and no getter

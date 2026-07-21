@@ -158,8 +158,8 @@ namespace {
 } // namespace
 
 NetworkRequestTask<SearchCompatibilities> AniListMangaRootGetter::search_support(RequestorContext context) const {
-	// Genres come from the live GenreCollection; sorts are static. (A cache like
-	// the LibSocial parser's LibSocialCatalog would spare the per-call fetch.)
+	// Genres come from the live GenreCollection; sorts are static. (Caching the
+	// fetched option catalog would spare the per-call fetch.)
 	SearchItems filters;
 
 	// Identity lookups, declared without a fetch: ids are not an enumerable option
