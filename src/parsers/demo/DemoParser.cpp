@@ -21,8 +21,9 @@ std::string DemoParser::identifier() const {
 
 ParserCompatibilities DemoParser::compatibilities() const {
 	return {
-	    .flags = compatibilities_flags::supports_manga_store
-	           | compatibilities_flags::supports_reading,
+	    .flags = compatibilities_flags::supports_manga_store   // a browsable manga library
+	           | compatibilities_flags::supports_reading       // that hosts its own pages
+	           | compatibilities_flags::supports_suggestions,  // and completes search tokens
 	};
 }
 
