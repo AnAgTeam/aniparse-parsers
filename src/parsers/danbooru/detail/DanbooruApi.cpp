@@ -112,13 +112,13 @@ ImageItemKind derive_kind(std::string_view file_ext) {
 ImageContainerInfo post_to_container_info(const boost::json::object& post) {
 	ImageContainerInfo info;
 	info.id = static_cast<ImageContainerID>(json::integer(post, "id"));
-	info.title = synthesize_title(post, info.id);
+	info.common.title = synthesize_title(post, info.id);
 
-	append_tags(info.tags, post, "tag_string_artist");
-	append_tags(info.tags, post, "tag_string_copyright");
-	append_tags(info.tags, post, "tag_string_character");
-	append_tags(info.tags, post, "tag_string_general");
-	append_tags(info.tags, post, "tag_string_meta");
+	append_tags(info.common.tags, post, "tag_string_artist");
+	append_tags(info.common.tags, post, "tag_string_copyright");
+	append_tags(info.common.tags, post, "tag_string_character");
+	append_tags(info.common.tags, post, "tag_string_general");
+	append_tags(info.common.tags, post, "tag_string_meta");
 
 	// Copyright is a space-separated list; a post can derive from several franchises,
 	// so surface every one (primary — the same token the title uses — lands first).
@@ -128,25 +128,25 @@ ImageContainerInfo post_to_container_info(const boost::json::object& post) {
 			const std::size_t end = space == std::string::npos ? copyright.size() : space;
 			if (end > start) {
 				std::string name = copyright.substr(start, end - start);
-				info.series.push_back(Series{ .name = name, .ref = name });
+				info.common.series.push_back(Series{ .name = name, .ref = name });
 			}
 			start = end + 1;
 		}
 	}
 
 	if (std::string preview = json::str(post, "preview_file_url"); !preview.empty()) {
-		info.previews.push_back(Image{ .url = std::move(preview) });
+		info.common.previews.push_back(Image{ .url = std::move(preview) });
 	}
 
 	// Opaque change marker: the post's last-updated stamp. Compared only for
 	// equality, so the raw string (tz + millisecond fraction) rides as-is.
-	info.revision = json::str(post, "updated_at");
+	info.common.revision = json::str(post, "updated_at");
 
 	// Danbooru rating is g/s/q/e; explicit is the source's own hentai marker.
 	std::string rating = json::str(post, "rating");
-	info.is_hentai = rating == "e";
+	info.common.is_hentai = rating == "e";
 	if (rating == "q" || rating == "e") {
-		info.age_restriction = 18;
+		info.common.age_restriction = 18;
 	}
 
 	// A post is a container-of-one.
@@ -200,11 +200,11 @@ ImageContainerInfo pool_to_container_info(const boost::json::object& pool) {
 	ImageContainerInfo info;
 	info.id = static_cast<ImageContainerID>(json::integer(pool, "id"));
 	// A pool has a name of its own (unlike a post), so no title synthesis needed.
-	info.title = json::str(pool, "name");
-	info.description.text = json::str(pool, "description");
+	info.common.title = json::str(pool, "name");
+	info.common.description.text = json::str(pool, "description");
 	// The pool states its size up front; items() pages through that many posts.
 	info.total_items = static_cast<long>(json::integer(pool, "post_count"));
-	info.revision = json::str(pool, "updated_at");
+	info.common.revision = json::str(pool, "updated_at");
 	return info;
 }
 

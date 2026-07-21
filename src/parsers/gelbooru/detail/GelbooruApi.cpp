@@ -102,28 +102,28 @@ ImageContainerInfo post_to_container_info(const boost::json::object& post,
 	info.id = static_cast<ImageContainerID>(json::integer(post, "id"));
 	// A booru post has no title; the flat tag string carries no category to build a
 	// readable one from, so synthesize a stable "#<id>".
-	info.title = "#" + std::to_string(info.id);
+	info.common.title = "#" + std::to_string(info.id);
 
-	append_tags(info.tags, post);
+	append_tags(info.common.tags, post);
 
 	if (std::string owner = json::str(post, "owner"); !owner.empty()) {
-		info.uploader = RelatedUser{ .name = owner, .ref = owner };
+		info.common.uploader = RelatedUser{ .name = owner, .ref = owner };
 	}
 
 	if (std::string preview = json::str(post, "preview_url"); !preview.empty()) {
-		info.previews.push_back(Image{ .url = std::move(preview), .headers = referer_headers(media_referer) });
+		info.common.previews.push_back(Image{ .url = std::move(preview), .headers = referer_headers(media_referer) });
 	}
 
 	// "change" is a unix timestamp used only as an opaque equality marker.
 	if (std::int64_t change = json::integer(post, "change"); change != 0) {
-		info.revision = std::to_string(change);
+		info.common.revision = std::to_string(change);
 	}
 
 	// Gelbooru rating is g/s/q/e; questionable/explicit are the source's adult tiers.
 	std::string rating = json::str(post, "rating");
-	info.is_hentai = rating == "explicit" || rating == "questionable" || rating == "e" || rating == "q";
-	if (info.is_hentai) {
-		info.age_restriction = 18;
+	info.common.is_hentai = rating == "explicit" || rating == "questionable" || rating == "e" || rating == "q";
+	if (info.common.is_hentai) {
+		info.common.age_restriction = 18;
 	}
 
 	info.total_items = 1;

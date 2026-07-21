@@ -160,8 +160,8 @@ NetworkRequestTask<PageResults<RelatedWork>> AniListMangaGetter::related(
 		RelatedWork work{
 		    .kind     = kind,
 		    .relation = relation_word(json::str(*edge, "relationType")),
-		    .title    = std::move(card.title),
-		    .previews = std::move(card.previews),
+		    .title    = std::move(card.common.title),
+		    .previews = std::move(card.common.previews),
 		};
 		if (id > 0) {
 			work.external_ids.push_back(ExternalId{

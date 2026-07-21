@@ -93,7 +93,7 @@ namespace {
 			url = aniparse::json::str(*poster, "large");
 		}
 		if (!url.empty()) {
-			info.previews.push_back(Image{ .url = std::move(url) });
+			info.common.previews.push_back(Image{ .url = std::move(url) });
 		}
 	}
 } // namespace
@@ -146,11 +146,11 @@ MangaInfo media_to_preview(const boost::json::object& resource) {
 	if (!attributes) {
 		return info;
 	}
-	info.title = display_title(*attributes);
+	info.common.title = display_title(*attributes);
 	if (const boost::json::object* titles = aniparse::json::object_field(*attributes, "titles")) {
 		if (std::string native = aniparse::json::str(*titles, "ja_jp");
-		    !native.empty() && native != info.title) {
-			info.original_title = std::move(native);
+		    !native.empty() && native != info.common.title) {
+			info.common.original_title = std::move(native);
 		}
 	}
 	set_poster(info, *attributes);
@@ -167,24 +167,24 @@ MangaInfo media_to_info(const boost::json::object& resource, const boost::json::
 	}
 
 	if (std::string synopsis = json::str(*attributes, "synopsis"); !synopsis.empty()) {
-		info.description = AttributedText{ .text = std::move(synopsis) };
+		info.common.description = AttributedText{ .text = std::move(synopsis) };
 	}
 
 	// averageRating is a 0-100 mean, delivered as a string.
 	if (std::string rating = json::str(*attributes, "averageRating"); !rating.empty()) {
 		if (double value = std::atof(rating.c_str()); value > 0.0) {
-			info.rating = Rating::from_score(value, 100);
+			info.common.rating = Rating::from_score(value, 100);
 		}
 	}
 
-	info.status = map_status(json::str(*attributes, "status"));
+	info.common.status = map_status(json::str(*attributes, "status"));
 
 	if (long chapters = static_cast<long>(json::integer(*attributes, "chapterCount")); chapters > 0) {
 		info.total_chapters = chapters;
 	}
 
 	// Kitsu's coarsest maturity flag: the R18 age rating marks adult content.
-	info.is_hentai = json::str(*attributes, "ageRating") == "R18";
+	info.common.is_hentai = json::str(*attributes, "ageRating") == "R18";
 
 	// Categories and mappings are sideloaded into the envelope's "included" array;
 	// for a single-resource fetch those are exactly this manga's.
@@ -201,11 +201,11 @@ MangaInfo media_to_info(const boost::json::object& resource, const boost::json::
 			}
 			if (type == "categories") {
 				if (std::string title = json::str(*entry_attrs, "title"); !title.empty()) {
-					info.tags.push_back(Tag{ .name = std::move(title) });
+					info.common.tags.push_back(Tag{ .name = std::move(title) });
 				}
 			} else if (type == "mappings") {
 				if (std::optional<ExternalId> external = mapping_to_external_id(*entry_attrs)) {
-					info.external_ids.push_back(*std::move(external));
+					info.common.external_ids.push_back(*std::move(external));
 				}
 			}
 		}

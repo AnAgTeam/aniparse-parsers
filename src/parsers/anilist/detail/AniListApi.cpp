@@ -45,7 +45,7 @@ namespace {
 		namespace json = aniparse::json;
 
 		if (long mal = static_cast<long>(json::integer(media, "idMal")); mal > 0) {
-			info.external_ids.push_back(ExternalId{
+			info.common.external_ids.push_back(ExternalId{
 			    .ns   = std::string(id_namespaces::mal),
 			    .kind = MediaKind::Manga,
 			    .id   = std::to_string(mal),
@@ -61,8 +61,8 @@ namespace {
 			return;
 		}
 		if (std::string native = aniparse::json::str(*title, "native");
-		    !native.empty() && native != info.title) {
-			info.original_title = std::move(native);
+		    !native.empty() && native != info.common.title) {
+			info.common.original_title = std::move(native);
 		}
 	}
 } // namespace
@@ -137,7 +137,7 @@ std::string display_title(const boost::json::object& media) {
 MangaInfo media_to_preview(const boost::json::object& media) {
 	MangaInfo info;
 	info.id    = static_cast<MangaID>(aniparse::json::integer(media, "id"));
-	info.title = display_title(media);
+	info.common.title = display_title(media);
 	set_original_title(info, media);
 	set_external_ids(info, media);
 	if (const boost::json::object* cover = aniparse::json::object_field(media, "coverImage")) {
@@ -146,7 +146,7 @@ MangaInfo media_to_preview(const boost::json::object& media) {
 			url = aniparse::json::str(*cover, "extraLarge");
 		}
 		if (!url.empty()) {
-			info.previews.push_back(Image{ .url = std::move(url) });
+			info.common.previews.push_back(Image{ .url = std::move(url) });
 		}
 	}
 	return info;
@@ -157,12 +157,12 @@ MangaInfo media_to_info(const boost::json::object& media) {
 
 	MangaInfo info;
 	info.id    = static_cast<MangaID>(json::integer(media, "id"));
-	info.title = display_title(media);
+	info.common.title = display_title(media);
 	set_original_title(info, media);
 	set_external_ids(info, media);
 
 	if (const std::string description = json::str(media, "description"); !description.empty()) {
-		info.description = text::from_html(description);
+		info.common.description = text::from_html(description);
 	}
 
 	// coverImage.extraLarge, falling back to large.
@@ -172,7 +172,7 @@ MangaInfo media_to_info(const boost::json::object& media) {
 			url = json::str(*cover, "large");
 		}
 		if (!url.empty()) {
-			info.previews.push_back(Image{ .url = std::move(url) });
+			info.common.previews.push_back(Image{ .url = std::move(url) });
 		}
 	}
 
@@ -190,7 +190,7 @@ MangaInfo media_to_info(const boost::json::object& media) {
 		for (const boost::json::value& genre : *genres) {
 			if (const boost::json::string* name = genre.if_string(); name && !name->empty()) {
 				std::string label(name->c_str(), name->size());
-				info.tags.push_back(Tag{ .name = label, .ref = std::move(label) });
+				info.common.tags.push_back(Tag{ .name = label, .ref = std::move(label) });
 			}
 		}
 	}
@@ -201,7 +201,7 @@ MangaInfo media_to_info(const boost::json::object& media) {
 				continue;
 			}
 			if (std::string name = json::str(*tag, "name"); !name.empty()) {
-				info.tags.push_back(Tag{ .name = std::move(name) });
+				info.common.tags.push_back(Tag{ .name = std::move(name) });
 			}
 		}
 	}
@@ -235,16 +235,16 @@ MangaInfo media_to_info(const boost::json::object& media) {
 
 	// averageScore is a 0-100 mean.
 	if (long score = static_cast<long>(json::integer(media, "averageScore")); score > 0) {
-		info.rating = Rating::from_score(static_cast<double>(score), 100);
+		info.common.rating = Rating::from_score(static_cast<double>(score), 100);
 	}
 
-	info.status = map_status(json::str(media, "status"));
+	info.common.status = map_status(json::str(media, "status"));
 
 	if (long chapters = static_cast<long>(json::integer(media, "chapters")); chapters > 0) {
 		info.total_chapters = chapters;
 	}
 
-	info.is_hentai = json::boolean(media, "isAdult");
+	info.common.is_hentai = json::boolean(media, "isAdult");
 	return info;
 }
 
