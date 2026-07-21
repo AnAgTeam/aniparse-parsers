@@ -44,6 +44,14 @@ add_library(aniparse-parsers STATIC
 	"src/parsers/gelbooru/GelbooruEngine.cpp" "include/aniparse/parsers/gelbooru/GelbooruEngine.hpp"
 	"src/parsers/gelbooru/GelbooruParser.cpp" "include/aniparse/parsers/gelbooru/GelbooruParser.hpp"
 	"src/parsers/gelbooru/GelbooruImagesGetter.cpp" "include/aniparse/parsers/gelbooru/GelbooruImagesGetter.hpp"
+	# demo: a self-contained sample source with embedded artwork (no network). Doubles
+	# as the worked example of authoring a parser and of the asset-client seam.
+	"src/parsers/demo/DemoData.cpp" "include/aniparse/parsers/demo/DemoData.hpp"
+	"src/parsers/demo/DemoParser.cpp" "include/aniparse/parsers/demo/DemoParser.hpp"
+	"src/parsers/demo/DemoMangaRootGetter.cpp" "include/aniparse/parsers/demo/DemoMangaRootGetter.hpp"
+	"src/parsers/demo/DemoMangaGetter.cpp" "include/aniparse/parsers/demo/DemoMangaGetter.hpp"
+	"src/parsers/demo/DemoAssetClient.cpp" "include/aniparse/parsers/demo/DemoAssetClient.hpp"
+	"src/parsers/demo/DemoAssets.generated.cpp" "include/aniparse/parsers/demo/DemoAssets.hpp"
 )
 
 set_property(TARGET aniparse-parsers PROPERTY CXX_STANDARD 20)
