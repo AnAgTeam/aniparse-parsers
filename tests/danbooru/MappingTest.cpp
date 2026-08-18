@@ -32,20 +32,20 @@ TEST_CASE("still post maps every tag category in append order", "[danbooru]") {
 
 	// 1 artist + 1 copyright + 1 character + 40 general + 2 meta = 45. The old
 	// dangling bug truncated this to ~5, so the exact count is the regression guard.
-	REQUIRE(info.tags.size() == 45);
+	REQUIRE(info.common.tags.size() == 45);
 
 	// Append order is artist, copyright, character, general, meta.
-	CHECK(info.tags.front().name == "example_artist");
-	CHECK(info.tags[1].name == "touhou_project");
-	CHECK(info.tags[2].name == "cirno");
+	CHECK(info.common.tags.front().name == "example_artist");
+	CHECK(info.common.tags[1].name == "touhou_project");
+	CHECK(info.common.tags[2].name == "cirno");
 	// A general tag deep in the list — present only if the whole string was walked,
 	// not just its first few tokens (the discriminating check vs the truncation bug).
-	CHECK(info.tags[42].name == "z_final_general_tag");
-	CHECK(info.tags[43].name == "highres");
-	CHECK(info.tags.back().name == "absurdres");
+	CHECK(info.common.tags[42].name == "z_final_general_tag");
+	CHECK(info.common.tags[43].name == "highres");
+	CHECK(info.common.tags.back().name == "absurdres");
 
 	// ref round-trips the raw token (the token-as-key invariant).
-	CHECK(info.tags[2].ref == "cirno");
+	CHECK(info.common.tags[2].ref == "cirno");
 }
 
 TEST_CASE("still post synthesizes title and maps container metadata", "[danbooru]") {
@@ -53,15 +53,15 @@ TEST_CASE("still post synthesizes title and maps container metadata", "[danbooru
 	aniparse::ImageContainerInfo info = danbooru::post_to_container_info(doc.as_object());
 
 	CHECK(info.id == 5000001);
-	CHECK(info.title == "cirno (touhou_project)");
-	REQUIRE(info.series.size() == 1);
-	CHECK(info.series.front().name == "touhou_project");
-	CHECK(info.revision == "2026-01-02T03:04:05.678-05:00");
+	CHECK(info.common.title == "cirno (touhou_project)");
+	REQUIRE(info.common.series.size() == 1);
+	CHECK(info.common.series.front().name == "touhou_project");
+	CHECK(info.common.revision == "2026-01-02T03:04:05.678-05:00");
 	REQUIRE(info.total_items.has_value());
 	CHECK(*info.total_items == 1);
-	REQUIRE(info.previews.size() == 1);
-	CHECK(info.is_hentai == false);
-	CHECK(info.age_restriction == 0);
+	REQUIRE(info.common.previews.size() == 1);
+	CHECK(info.common.is_hentai == false);
+	CHECK(info.common.age_restriction == 0);
 }
 
 TEST_CASE("still post maps its single media leaf", "[danbooru]") {
@@ -108,8 +108,8 @@ TEST_CASE("banned post yields metadata but no media leaf", "[danbooru]") {
 	// The surviving metadata still maps (container-of-one keeps its info).
 	aniparse::ImageContainerInfo info = danbooru::post_to_container_info(doc.as_object());
 	CHECK(info.id == 5000004);
-	CHECK(info.title == "cirno (original)");
-	CHECK_FALSE(info.tags.empty());
+	CHECK(info.common.title == "cirno (original)");
+	CHECK_FALSE(info.common.tags.empty());
 }
 
 TEST_CASE("derive_kind maps file extensions to media kinds", "[danbooru]") {
@@ -129,13 +129,13 @@ TEST_CASE("rating drives the hentai marker and age restriction", "[danbooru]") {
 		post["rating"] = rating;
 		return danbooru::post_to_container_info(post);
 	};
-	CHECK(info_for("g").is_hentai == false);
-	CHECK(info_for("g").age_restriction == 0);
-	CHECK(info_for("s").age_restriction == 0);
-	CHECK(info_for("q").age_restriction == 18);
-	CHECK(info_for("q").is_hentai == false);
-	CHECK(info_for("e").is_hentai == true);
-	CHECK(info_for("e").age_restriction == 18);
+	CHECK(info_for("g").common.is_hentai == false);
+	CHECK(info_for("g").common.age_restriction == 0);
+	CHECK(info_for("s").common.age_restriction == 0);
+	CHECK(info_for("q").common.age_restriction == 18);
+	CHECK(info_for("q").common.is_hentai == false);
+	CHECK(info_for("e").common.is_hentai == true);
+	CHECK(info_for("e").common.age_restriction == 18);
 }
 
 TEST_CASE("extract_post_id reads the digits after /posts/", "[danbooru]") {

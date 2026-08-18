@@ -28,11 +28,11 @@ CORO_TEST_CASE("pool info maps name, size and description", "[danbooru]") {
 	REQUIRE(info.has_value());
 
 	CHECK(info->id == 1234);
-	CHECK(info->title == "Touhou_-_Cirno_Collection"); // the pool's own name, not synthesized
+	CHECK(info->common.title == "Touhou_-_Cirno_Collection"); // the pool's own name, not synthesized
 	REQUIRE(info->total_items.has_value());
 	CHECK(*info->total_items == 3);                     // stated up front by the pool
-	CHECK(info->description.text.starts_with("A synthetic pool"));
-	CHECK(info->revision == "2026-02-10T12:00:00.000-05:00");
+	CHECK(info->common.description.text.starts_with("A synthetic pool"));
+	CHECK(info->common.revision == "2026-02-10T12:00:00.000-05:00");
 }
 
 CORO_TEST_CASE("pool items page through the posts, skipping banned", "[danbooru]") {

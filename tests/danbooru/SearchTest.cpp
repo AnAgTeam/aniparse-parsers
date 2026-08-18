@@ -55,8 +55,8 @@ CORO_TEST_CASE("search maps a posts page into container getters", "[danbooru]") 
 	auto info0 = page->results[0].item->preview_info();
 	REQUIRE(info0.has_value());
 	CHECK(info0->id == 5000010);
-	CHECK(info0->title == "cirno (touhou_project)");
-	CHECK(info0->tags.size() == 9); // 1 artist + 1 copyright + 1 character + 1 meta + 5 general
+	CHECK(info0->common.title == "cirno (touhou_project)");
+	CHECK(info0->common.tags.size() == 9); // 1 artist + 1 copyright + 1 character + 1 meta + 5 general
 	auto items0 = co_await page->results[0].item->items(context, GetFilters{});
 	REQUIRE(items0.has_value());
 	REQUIRE(items0->results.size() == 1);
@@ -74,7 +74,7 @@ CORO_TEST_CASE("search maps a posts page into container getters", "[danbooru]") 
 	auto info2 = page->results[2].item->preview_info();
 	REQUIRE(info2.has_value());
 	CHECK(info2->id == 5000012);
-	CHECK(info2->title == "cirno (original)");
+	CHECK(info2->common.title == "cirno (original)");
 	auto items2 = co_await page->results[2].item->items(context, GetFilters{});
 	REQUIRE(items2.has_value());
 	CHECK(items2->results.empty());

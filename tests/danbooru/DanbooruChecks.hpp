@@ -41,8 +41,8 @@ inline coro::task<void> assert_search_shape(aniparse::RequestorContext context, 
 	for (const auto& entry : page->results) {
 		auto card = entry.item->preview_info();
 		REQUIRE(card.has_value());
-		CHECK_FALSE(card->title.empty());
-		CHECK_FALSE(card->tags.empty());
+		CHECK_FALSE(card->common.title.empty());
+		CHECK_FALSE(card->common.tags.empty());
 	}
 
 	if (!page->results.empty()) {

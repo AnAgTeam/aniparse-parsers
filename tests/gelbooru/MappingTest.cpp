@@ -44,18 +44,18 @@ TEST_CASE("gelbooru post maps tags, uploader, rating and revision", "[gelbooru]"
 	    gelbooru::post_to_container_info(posts->at(0).as_object(), "https://gelbooru.com/");
 
 	CHECK(info.id == 8000001);
-	CHECK(info.title == "#8000001"); // synthesized — a booru post has no title
+	CHECK(info.common.title == "#8000001"); // synthesized — a booru post has no title
 	// The single space-separated tag string is split into six tokens.
-	REQUIRE(info.tags.size() == 6);
-	CHECK(info.tags.front().name == "1girl");
-	CHECK(info.tags.back().ref == "highres");
-	REQUIRE(info.uploader.has_value());
-	CHECK(info.uploader->name == "example_uploader");
-	CHECK(info.revision == "1750000000"); // "change" timestamp as opaque marker
-	CHECK(info.is_hentai == false);        // general
-	CHECK(info.age_restriction == 0);
-	REQUIRE(info.previews.size() == 1);
-	CHECK(info.previews.front().headers.get("Referer") == "https://gelbooru.com/");
+	REQUIRE(info.common.tags.size() == 6);
+	CHECK(info.common.tags.front().name == "1girl");
+	CHECK(info.common.tags.back().ref == "highres");
+	REQUIRE(info.common.uploader.has_value());
+	CHECK(info.common.uploader->name == "example_uploader");
+	CHECK(info.common.revision == "1750000000"); // "change" timestamp as opaque marker
+	CHECK(info.common.is_hentai == false);        // general
+	CHECK(info.common.age_restriction == 0);
+	REQUIRE(info.common.previews.size() == 1);
+	CHECK(info.common.previews.front().headers.get("Referer") == "https://gelbooru.com/");
 }
 
 TEST_CASE("gelbooru media leaf carries the Referer; video derives kind and poster", "[gelbooru]") {

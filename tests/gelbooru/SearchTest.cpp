@@ -48,7 +48,7 @@ CORO_TEST_CASE("gelbooru search maps the DAPI envelope into container getters", 
 	auto info0 = page->results[0].item->preview_info();
 	REQUIRE(info0.has_value());
 	CHECK(info0->id == 8000001);
-	CHECK(info0->tags.size() == 6);
+	CHECK(info0->common.tags.size() == 6);
 
 	auto items0 = co_await page->results[0].item->items(context, GetFilters{});
 	REQUIRE(items0.has_value());

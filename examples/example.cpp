@@ -37,13 +37,13 @@ static std::string error_line(const RequestError& error) {
 }
 
 static void print_info(const MangaInfo& info) {
-	std::println("  Title:    {}", info.title);
-	std::println("  Original: {}", info.original_title.value_or("-"));
-	std::println("  Status:   {}", info.status.name.empty() ? "-" : info.status.name);
-	std::println("  Rating:   {}", info.rating ? std::to_string(info.rating->score()) : "-");
-	std::println("  Tags:     {}", info.tags.size());
-	std::println("  Cover:    {}", info.previews.empty() ? "-" : info.previews.front().url);
-	const std::string& description = info.description.text;
+	std::println("  Title:    {}", info.common.title);
+	std::println("  Original: {}", info.common.original_title.value_or("-"));
+	std::println("  Status:   {}", info.common.status.name.empty() ? "-" : info.common.status.name);
+	std::println("  Rating:   {}", info.common.rating ? std::to_string(info.common.rating->score()) : "-");
+	std::println("  Tags:     {}", info.common.tags.size());
+	std::println("  Cover:    {}", info.common.previews.empty() ? "-" : info.common.previews.front().url);
+	const std::string& description = info.common.description.text;
 	std::println("  Summary:  {}", description.substr(0, std::min<std::size_t>(description.size(), 100)));
 }
 
@@ -78,7 +78,7 @@ static coro::task<void> showcase_images(ParserStore& store, RequestorContext bas
 	}
 	for (const auto& entry : found->results) {
 		if (auto info = co_await entry.item->info(context)) {
-			std::println("   - {} [{} tags]", info->title, info->tags.size());
+			std::println("   - {} [{} tags]", info->common.title, info->common.tags.size());
 		}
 	}
 	if (!found->results.empty()) {
@@ -146,7 +146,7 @@ static coro::task<void> showcase_gelbooru(ParserStore& store, RequestorContext b
 	}
 	for (const auto& entry : found->results) {
 		if (auto info = co_await entry.item->info(context)) {
-			std::println("   - {} [{} tags]", info->title, info->tags.size());
+			std::println("   - {} [{} tags]", info->common.title, info->common.tags.size());
 		}
 	}
 	if (!found->results.empty()) {
@@ -185,8 +185,9 @@ static coro::task<void> showcase(ParserStore& store, RequestorContext base,
 	}
 	std::println("  total matches: {}", found->total_count);
 	for (const auto& item : found->results) {
-		if (auto preview = co_await item.item->preview_info(context)) {
-			std::println("   - {} / {}", preview->title, preview->original_title.value_or("-"));
+		// preview_info() is the free, synchronous accessor — no context, no request.
+		if (auto preview = item.item->preview_info()) {
+			std::println("   - {} / {}", preview->common.title, preview->common.original_title.value_or("-"));
 		}
 	}
 	if (!found->results.empty()) {
@@ -236,8 +237,8 @@ static coro::task<void> showcase_identity(ParserStore& store, RequestorContext b
 		if (!info) {
 			continue;
 		}
-		std::println("   - {}", info->title);
-		for (const ExternalId& id : info->external_ids) {
+		std::println("   - {}", info->common.title);
+		for (const ExternalId& id : info->common.external_ids) {
 			std::println("     carries {} {} = {}",
 			             id.kind == MediaKind::Manga ? "manga" : "anime", id.ns, id.id);
 		}
