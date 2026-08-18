@@ -8,7 +8,7 @@
 namespace aniparse::parsers::demo {
 
 std::string asset_url(std::string_view key) {
-	std::string url(kScheme);
+	std::string url(scheme);
 	url.append(key);
 	return url;
 }
@@ -59,7 +59,7 @@ DemoTitle mk(int id, const char* slug, const char* title, const char* original,
 	};
 }
 
-const std::vector<DemoTitle> kCatalog = [] {
+const std::vector<DemoTitle> catalog_titles = [] {
 	std::vector<DemoTitle> c;
 
 	c.push_back(DemoTitle{
@@ -184,17 +184,17 @@ const std::vector<DemoTitle> kCatalog = [] {
 	return c;
 }();
 
-const std::vector<std::string> kPageKeys = {
+const std::vector<std::string> page_keys = {
     "ch1/p01.png", "ch1/p02.png", "ch1/p03.png", "ch1/p04.png",
     "ch1/p05.png", "ch1/p06.png", "ch1/p07.png", "ch1/p08.png",
 };
 
 } // namespace
 
-const std::vector<DemoTitle>& catalog() { return kCatalog; }
+const std::vector<DemoTitle>& catalog() { return catalog_titles; }
 
 const DemoTitle* find_by_id(int id) {
-	for (const auto& t : kCatalog) {
+	for (const auto& t : catalog_titles) {
 		if (t.id == id) {
 			return &t;
 		}
@@ -203,7 +203,7 @@ const DemoTitle* find_by_id(int id) {
 }
 
 const DemoTitle* find_by_slug(std::string_view slug) {
-	for (const auto& t : kCatalog) {
+	for (const auto& t : catalog_titles) {
 		if (t.slug == slug) {
 			return &t;
 		}
@@ -211,6 +211,6 @@ const DemoTitle* find_by_slug(std::string_view slug) {
 	return nullptr;
 }
 
-const std::vector<std::string>& chapter_page_keys() { return kPageKeys; }
+const std::vector<std::string>& chapter_page_keys() { return page_keys; }
 
 } // namespace aniparse::parsers::demo
