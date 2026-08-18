@@ -17,7 +17,7 @@ namespace {
 /// A coroutine that answers one demo:// request from the embedded bytes. Only
 /// demo URLs reach it; real traffic never enters a coroutine here (see below).
 NetworkRequestTask<ResponseData> serve_asset(std::string url) {
-	const std::string_view key = std::string_view(url).substr(kScheme.size());
+	const std::string_view key = std::string_view(url).substr(scheme.size());
 	if (auto bytes = asset_bytes(key)) {
 		ResponseData response;
 		response.status_code = 200;
@@ -38,7 +38,7 @@ public:
 	explicit DemoAssetClient(std::shared_ptr<ClientContext> inner) : inner_(std::move(inner)) {}
 
 	NetworkRequestTask<ResponseData> do_request(ConfiguredGetRequest request) override {
-		if (std::string_view(request.request.url).starts_with(kScheme)) {
+		if (std::string_view(request.request.url).starts_with(scheme)) {
 			return serve_asset(request.request.url);
 		}
 		return inner_->do_request(std::move(request));

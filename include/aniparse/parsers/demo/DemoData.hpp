@@ -19,7 +19,7 @@ namespace aniparse::parsers::demo {
 
 /// The URL scheme the demo parser stamps onto every image it produces. The demo
 /// asset client (@see DemoAssetClient) intercepts it and serves the embedded bytes.
-inline constexpr std::string_view kScheme = "demo://";
+inline constexpr std::string_view scheme = "demo://";
 
 /// Build a demo:// URL for an embedded asset key (e.g. "covers/fox-lantern.png").
 [[nodiscard]] std::string asset_url(std::string_view key);
