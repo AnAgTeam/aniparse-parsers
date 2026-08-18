@@ -46,7 +46,7 @@ struct DummyCookieJar : CookieJar {
 
 /// A logger that drops every message.
 struct DummyLogger : LoggerContext {
-	void log(LogLevel, std::string_view, std::source_location) override {}
+	void log(LogLevel, std::string_view, std::string_view, std::source_location) override {}
 };
 
 /// A client that returns a preset response for every request and records the last
