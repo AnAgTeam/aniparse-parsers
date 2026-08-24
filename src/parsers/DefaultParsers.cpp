@@ -9,7 +9,9 @@
 #include "aniparse/parsers/kitsu/KitsuParser.hpp"
 #include "aniparse/parsers/danbooru/DanbooruParser.hpp"
 #include "aniparse/parsers/gelbooru/GelbooruParser.hpp"
+#ifdef ANIPARSE_PARSERS_WITH_DEMO
 #include "aniparse/parsers/demo/DemoParser.hpp"
+#endif
 
 #include <memory>
 
@@ -20,10 +22,12 @@ void emplace_default_parsers(ParserStore::Edit& edit) {
 	edit.add_parser(std::make_shared<KitsuParser>());
 	edit.add_parser(std::make_shared<DanbooruParser>());
 	edit.add_parser(std::make_shared<GelbooruParser>());
-	// A self-contained demo source (fictional titles, embedded artwork). Present in
-	// every build so the app has a working library/reader with no external source,
-	// and so the read path can be exercised offline. @see demo::DemoParser
+#ifdef ANIPARSE_PARSERS_WITH_DEMO
+	// A self-contained demo source (fictional titles, embedded artwork). Builds that
+	// configure ANIPARSE_PARSERS_WITH_DEMO=OFF (the iOS app — the embedded pages cost
+	// ~0.8 MB of binary) skip both the sources and this registration. @see demo::DemoParser
 	edit.add_parser(std::make_shared<demo::DemoParser>());
+#endif
 }
 
 void emplace_default_parsers(ParserStore& store) {

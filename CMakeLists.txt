@@ -4,6 +4,7 @@ cmake_minimum_required (VERSION 3.18)
 
 option(ANIPARSE_PARSERS_BUILD_EXAMPLES "build examples, Default=ON" ON)
 option(ANIPARSE_PARSERS_BUILD_TESTS "build the parser test suite, Default=ON" ON)
+option(ANIPARSE_PARSERS_WITH_DEMO "build the self-contained demo source (embedded artwork), Default=ON" ON)
 
 # without this vcpkg won't try to install dependencies
 if (CMAKE_TOOLCHAIN_FILE MATCHES "vcpkg.cmake")
@@ -44,15 +45,24 @@ add_library(aniparse-parsers STATIC
 	"src/parsers/gelbooru/GelbooruEngine.cpp" "include/aniparse/parsers/gelbooru/GelbooruEngine.hpp"
 	"src/parsers/gelbooru/GelbooruParser.cpp" "include/aniparse/parsers/gelbooru/GelbooruParser.hpp"
 	"src/parsers/gelbooru/GelbooruImagesGetter.cpp" "include/aniparse/parsers/gelbooru/GelbooruImagesGetter.hpp"
-	# demo: a self-contained sample source with embedded artwork (no network). Doubles
-	# as the worked example of authoring a parser and of the asset-client seam.
-	"src/parsers/demo/DemoData.cpp" "include/aniparse/parsers/demo/DemoData.hpp"
-	"src/parsers/demo/DemoParser.cpp" "include/aniparse/parsers/demo/DemoParser.hpp"
-	"src/parsers/demo/DemoMangaRootGetter.cpp" "include/aniparse/parsers/demo/DemoMangaRootGetter.hpp"
-	"src/parsers/demo/DemoMangaGetter.cpp" "include/aniparse/parsers/demo/DemoMangaGetter.hpp"
-	"src/parsers/demo/DemoAssetClient.cpp" "include/aniparse/parsers/demo/DemoAssetClient.hpp"
-	"src/parsers/demo/DemoAssets.generated.cpp" "include/aniparse/parsers/demo/DemoAssets.hpp"
 )
+
+# demo: a self-contained sample source with embedded artwork (no network). Doubles
+# as the worked example of authoring a parser and of the asset-client seam. The
+# embedded pages cost ~0.8 MB of binary, so size-sensitive consumers (the iOS app)
+# configure with -DANIPARSE_PARSERS_WITH_DEMO=OFF; DefaultParsers.cpp drops the
+# registration on the same macro.
+if (ANIPARSE_PARSERS_WITH_DEMO)
+	target_sources(aniparse-parsers PRIVATE
+		"src/parsers/demo/DemoData.cpp" "include/aniparse/parsers/demo/DemoData.hpp"
+		"src/parsers/demo/DemoParser.cpp" "include/aniparse/parsers/demo/DemoParser.hpp"
+		"src/parsers/demo/DemoMangaRootGetter.cpp" "include/aniparse/parsers/demo/DemoMangaRootGetter.hpp"
+		"src/parsers/demo/DemoMangaGetter.cpp" "include/aniparse/parsers/demo/DemoMangaGetter.hpp"
+		"src/parsers/demo/DemoAssetClient.cpp" "include/aniparse/parsers/demo/DemoAssetClient.hpp"
+		"src/parsers/demo/DemoAssets.generated.cpp" "include/aniparse/parsers/demo/DemoAssets.hpp"
+	)
+	target_compile_definitions(aniparse-parsers PRIVATE ANIPARSE_PARSERS_WITH_DEMO=1)
+endif()
 
 set_property(TARGET aniparse-parsers PROPERTY CXX_STANDARD 20)
 set_property(TARGET aniparse-parsers PROPERTY CXX_STANDARD_REQUIRED ON)
