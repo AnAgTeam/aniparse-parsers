@@ -158,6 +158,11 @@ NetworkRequestTask<PageResults<RelatedWork>> DemoMangaGetter::related(
 	co_return out;
 }
 
+std::string DemoMangaGetter::canonical_url(RequestorContext context) const {
+	return std::string(context.canonical_base_url("https://asagao.demo")) + "/manga/"
+	     + std::to_string(id_);
+}
+
 NetworkRequestTask<SerializedGetterData> DemoMangaGetter::serialize() const {
 	co_return SerializedGetterData{ .url = std::to_string(id_) };
 }

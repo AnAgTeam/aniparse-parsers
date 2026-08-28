@@ -45,6 +45,8 @@ public:
 	    RequestorContext context,
 	    GetFilters filters) const override;
 
+	[[nodiscard]] std::string canonical_url(RequestorContext context) const override;
+
 	NetworkRequestTask<SerializedGetterData> serialize() const override;
 
 private:

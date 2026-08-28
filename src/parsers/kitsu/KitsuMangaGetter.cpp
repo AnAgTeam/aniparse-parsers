@@ -72,6 +72,10 @@ NetworkRequestTask<PageResults<MangaPage>> KitsuMangaGetter::chapter_pages(
 	                              "Kitsu does not host chapter pages");
 }
 
+std::string KitsuMangaGetter::canonical_url(RequestorContext context) const {
+	return std::string(context.canonical_base_url("https://kitsu.app")) + "/manga/" + ref_;
+}
+
 NetworkRequestTask<SerializedGetterData> KitsuMangaGetter::serialize() const {
 	// Identity is the id/slug ref; the preview is a search-time cache, not
 	// identity, so a restored getter fetches info() on preview_info instead.

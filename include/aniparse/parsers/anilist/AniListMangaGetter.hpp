@@ -41,6 +41,8 @@ public:
 	    GetFilters filters,
 	    std::optional<MangaTranslationID> translation) const override;
 
+	[[nodiscard]] std::string canonical_url(RequestorContext context) const override;
+
 	NetworkRequestTask<SerializedGetterData> serialize() const override;
 
 private:

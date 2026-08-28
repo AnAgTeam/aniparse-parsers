@@ -197,6 +197,11 @@ NetworkRequestTask<PageResults<MangaPage>> AniListMangaGetter::chapter_pages(
 	                              "AniList does not host chapter pages");
 }
 
+std::string AniListMangaGetter::canonical_url(RequestorContext context) const {
+	return std::string(context.canonical_base_url("https://anilist.co")) + "/manga/"
+	     + std::to_string(media_id_);
+}
+
 NetworkRequestTask<SerializedGetterData> AniListMangaGetter::serialize() const {
 	// Identity is the numeric media id; the preview is a search-time cache, not
 	// identity, so a restored getter fetches info() on preview_info instead.
